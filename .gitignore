@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.pyright/
+
+# Node / webapp
+node_modules/
+**/node_modules/
+*.tsbuildinfo
+
+# Rust / Tauri (fleet default even without native/)
+target/
+native/target/
+web_sota/src-tauri/target/
+gen/
+
+# Build output
+dist/
+build/
+*.mcpb
+
+# MCPB pack staging (exact copy of src/ for packing - never commit)
+mcpb/src/
+mcpb/
+
+# Data / DB (jobs, sqlite, datasets, models)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets
+.env
+.env.*
+*.pem
+
+# Logs / caches
+*.log
+logs/
+cua-reports/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Fleet backup patterns (always ignore both)
+*.bak
+*.bak.*

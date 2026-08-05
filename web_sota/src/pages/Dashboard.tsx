@@ -1,29 +1,93 @@
-import { ArrowRight, Rocket } from "lucide-react";
-import { useEffect, useState } from "react";
-import { type DashboardStats, api } from "../api";
-import { KpiCard, MockBadge, PageHeader } from "../components/ui";
+import { ArrowRight, Download, ExternalLink, Play, Rocket, Square } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { type DashboardStats, type JobDetail, api } from "../api";
+import { KpiCard, MockBadge, PageHeader, StatusBadge } from "../components/ui";
+
+interface Onboarding {
+  configured: boolean;
+  checks: Record<string, boolean>;
+  studio: { running: boolean; url?: string };
+  next_steps: string[];
+}
 
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [onboarding, setOnboarding] = useState<{
-    configured: boolean;
-    checks: Record<string, boolean>;
-  } | null>(null);
+  const [onboarding, setOnboarding] = useState<Onboarding | null>(null);
   const [error, setError] = useState("");
+  const [installing, setInstalling] = useState(false);
+  const [installJob, setInstallJob] = useState<JobDetail | null>(null);
+  const [studioBusy, setStudioBusy] = useState(false);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     api
       .get<DashboardStats>("/api/dashboard")
       .then(setStats)
       .catch((e) => setError(String(e)));
     api
-      .get<{ configured: boolean; checks: Record<string, boolean> }>("/api/onboarding/status")
+      .get<Onboarding>("/api/onboarding/status")
       .then(setOnboarding)
-      .catch(() => setOnboarding({ configured: false, checks: {} }));
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    refresh();
+    const t = setInterval(refresh, 8000);
+    return () => clearInterval(t);
+  }, [refresh]);
+
+  // While an install job exists, poll its status for live progress.
+  useEffect(() => {
+    if (!installJob) return;
+    const t = setInterval(async () => {
+      try {
+        const j = await api.get<JobDetail>(`/api/jobs/${installJob.id}`);
+        setInstallJob(j);
+        if (j.status === "done" || j.status === "failed" || j.status === "cancelled") {
+          clearInterval(t);
+          setInstalling(false);
+          refresh();
+        }
+      } catch {
+        clearInterval(t);
+        setInstalling(false);
+      }
+    }, 4000);
+    return () => clearInterval(t);
+  }, [installJob, refresh]);
+
+  const startInstall = async () => {
+    setError("");
+    setInstalling(true);
+    try {
+      const r = await api.post<{ data: { job_id: string } }>("/api/env/install", {});
+      const j = await api.get<JobDetail>(`/api/jobs/${r.data.job_id}`);
+      setInstallJob(j);
+    } catch (e) {
+      setError(String(e));
+      setInstalling(false);
+    }
+  };
+
+  const toggleStudio = async () => {
+    setStudioBusy(true);
+    setError("");
+    try {
+      await api.post(
+        onboarding?.studio.running ? "/api/env/studio/stop" : "/api/env/studio/start",
+        {},
+      );
+      setTimeout(refresh, 1500);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setStudioBusy(false);
+    }
+  };
 
   const gpu = stats?.gpu;
   const mock = !onboarding?.configured;
+  const showInstallProgress =
+    installing || (installJob && ["queued", "running"].includes(installJob.status));
 
   return (
     <div data-testid="dashboard">
@@ -38,31 +102,86 @@ export default function Dashboard() {
       {!onboarding?.configured && (
         <div
           data-testid="onboarding-cue"
-          className="mb-6 flex flex-col gap-3 rounded-xl border-2 border-red-700 bg-red-950/30 p-5 sm:flex-row sm:items-center sm:justify-between"
+          className="mb-6 flex flex-col gap-4 rounded-xl border-2 border-red-700 bg-red-950/30 p-5"
         >
           <div className="flex items-start gap-3">
             <Rocket className="mt-0.5 h-5 w-5 text-red-400" />
             <div>
               <div className="font-semibold text-red-200">Unsloth environment not configured</div>
               <div className="mt-1 text-sm text-red-300/80">
-                Install Unsloth Studio (
-                <code className="rounded bg-red-900/40 px-1">
-                  irm https://unsloth.ai/install.ps1 | iex
-                </code>
-                ) or set <code className="rounded bg-red-900/40 px-1">UNSLOTH_PYTHON</code>. See{" "}
-                <a className="underline" href="/help">
-                  Help → Onboarding
-                </a>
-                .
+                Training needs Unsloth installed (PyTorch + CUDA kernels, ~2.8 GB). The server can
+                install it for you automatically, or you can install it manually.
               </div>
             </div>
           </div>
-          <a
-            href="/help"
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500"
+
+          {showInstallProgress && installJob ? (
+            <div className="rounded-lg border border-red-800 bg-red-950/40 p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-mono text-red-200">{installJob.id}</span>
+                <StatusBadge status={installJob.status} />
+              </div>
+              <div className="mt-2 text-xs text-red-300/80">
+                Downloading ~2.8 GB (PyTorch + Unsloth + llama.cpp). This takes 10-30 minutes - live
+                progress in the job log below.
+              </div>
+              <pre className="mt-2 max-h-40 overflow-y-auto rounded bg-zinc-950 p-2 font-mono text-[10px] text-zinc-400">
+                {installJob.log_tail.slice(-12).join("\n") || "waiting for installer output..."}
+              </pre>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={startInstall}
+                disabled={installing}
+                data-testid="env-install"
+                className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+              >
+                <Download className="h-4 w-4" />{" "}
+                {installing ? "Queuing install..." : "Install Unsloth (auto, ~2.8 GB)"}
+              </button>
+              <a
+                href="/help"
+                className="flex items-center gap-2 rounded-lg border border-red-700 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-950"
+              >
+                Manual install guide <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+
+      {onboarding?.configured && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+          <div className="flex items-center gap-2 text-sm text-zinc-300">
+            <span
+              className={`h-2 w-2 rounded-full ${onboarding.studio.running ? "bg-green-500" : "bg-zinc-600"}`}
+            />
+            Unsloth Studio {onboarding.studio.running ? "running" : "stopped"}
+            {onboarding.studio.running && (
+              <a
+                href={onboarding.studio.url}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-1 inline-flex items-center gap-1 text-amber-400 hover:underline"
+              >
+                open UI <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </div>
+          <button
+            onClick={toggleStudio}
+            disabled={studioBusy}
+            data-testid="studio-toggle"
+            className="flex items-center gap-2 rounded-lg border border-zinc-700 px-3 py-1.5 text-sm hover:bg-zinc-800 disabled:opacity-50"
           >
-            Start onboarding <ArrowRight className="h-4 w-4" />
-          </a>
+            {onboarding.studio.running ? (
+              <Square className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+            {studioBusy ? "..." : onboarding.studio.running ? "Stop Studio" : "Start Studio"}
+          </button>
         </div>
       )}
 

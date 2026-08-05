@@ -16,6 +16,9 @@ dashboards. See `docs/ARCHITECTURE.md` for data flow.
 | `jobs_register_ollama` | Register a GGUF as an Ollama tag | `job_id`, `model_name_to_register` (tag) |
 | `models_list` | Trained artifacts under `data/models/` | — |
 | `datasets_list` | Local datasets under `data/datasets/` | — |
+| `env_install` | Run the official Unsloth installer as a job (~2.8 GB, 10-30 min; refuses when already configured) | — |
+| `env_studio_start` | Launch Unsloth Studio web UI (port 8888) | — |
+| `env_studio_stop` | Stop the Studio started by this server (tracked PID; never a manually-started one) | — |
 
 ### Examples
 
@@ -40,7 +43,8 @@ unsloth_ops(operation="jobs_register_ollama",
 
 Every op returns `{success: bool, message: str, data: {...}}`. Failures add
 `error` + `error_type`: `validation`, `not_configured`, `busy`, `vram_guard`,
-`not_found`, `missing_artifact`, `ollama_error`.
+`not_found`, `missing_artifact`, `ollama_error`, `already_configured`,
+`not_managed`.
 
 ### Dataset spec
 
@@ -77,6 +81,8 @@ Environment readiness: configured flag, Unsloth venv path, torch/CUDA.
 | `GET /api/skills`, `GET /api/skills/{name}`, `GET /skill/{name}` | Skill discovery + content |
 | `GET/POST /api/jobs`, `GET/DELETE /api/jobs/{id}`, `GET /api/jobs/{id}/log` | Job CRUD |
 | `GET /api/models`, `GET /api/datasets` | Artifact lists |
+| `POST /api/env/install` | Start the auto-install job (202) |
+| `POST /api/env/studio/start` · `POST /api/env/studio/stop` | Studio UI lifecycle |
 | `GET /api/gpu` | Raw nvidia-smi data |
 | `GET /api/logs` | Server ring log |
 | `GET /api/onboarding/status` | Configured flag + check breakdown |

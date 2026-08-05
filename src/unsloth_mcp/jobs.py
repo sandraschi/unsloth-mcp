@@ -266,6 +266,8 @@ class JobQueue:
             return root / "train_job.py"
         if kind == "export":
             return root / "export_job.py"
+        if kind == "install":
+            return root / "install_env_job.py"
         return None
 
 

@@ -2,6 +2,46 @@
 
 Running record of builds, regressions, and fixes. Update after every build.
 
+## 0.1.1 — environment management (2026-08-05)
+
+### Feature round: detect / install / start Unsloth
+
+- **Detect** (already present, extended): `system` op + `/api/onboarding/status`
+  + Dashboard KPI now include Unsloth Studio server status (port 8888 probe).
+- **Install if missing** (NEW): `env_install` op + `POST /api/env/install` runs
+  the official installer (`irm https://unsloth.ai/install.ps1 | iex`, autostart
+  skipped) as a tracked job (kind `install` → `scripts/install_env_job.py`,
+  live streaming log, cancelable). Refuses with `already_configured` when the
+  environment exists; clears the probe cache on completion. Dashboard red
+  banner now has an **Install Unsloth (auto)** button with live progress.
+- **Start Studio** (NEW): `env_studio_start`/`env_studio_stop` +
+  `POST /api/env/studio/{start,stop}`. Launches `unsloth.exe studio -p 8888`
+  from the configured venv; tracks the spawned PID in `data/studio.pid` and
+  stops only that process (`not_managed` for externally-started instances).
+  Verified: Studio up on 8888 in ~35s (first launch), clean stop.
+- **Help page**: rebuilt with horizontal tabs (Overview | Environment &
+  Install | Training Guide | Tool Reference | Troubleshooting) + detailed
+  Unsloth documentation.
+- **Docs**: ONBOARDING (auto-install path), TOOLS (3 ops + 2 error types),
+  TROUBLESHOOTING (install/studio entries), README, SKILL.md, examples.json
+  (107 entries; 3-4-100 still PASS).
+
+### Fixes in this round
+
+| # | Issue | Root cause | Fix |
+|---|-------|-----------|-----|
+| 9 | `_OPERATIONS` Literal missing env ops | batch edit silently failed earlier | re-added; pyright caught it |
+| 10 | `subprocess` NameError in studio ops | ruff F401 had pruned the previously-unused import | restored import |
+| 11 | env tests used real data dir | ops call `get_settings()` internally | tests patch `ops.get_settings` |
+
+### Verification (2026-08-05)
+
+- ruff / pyright: PASS · pytest **26 passed** (7 new env tests) · tsc / biome: PASS
+- Playwright **8 passed** (new Help tabs test)
+- Live: `env_studio_start` → Studio up on 8888 (35s) → `env_studio_stop` (pid tracked)
+- `env_install` correctly refused with `already_configured` on the configured machine
+- MCPB re-packed: 53.2 KB, 3-4-100 PASS (system 3054 / user 4076 / examples 107)
+
 ## 0.1.0 — initial build (2026-08-05)
 
 ### Steps (documented per user request)

@@ -26,6 +26,10 @@ discriminator:
 - `jobs_register_ollama` — register a GGUF as an Ollama tag (`/api/create`)
 - `models_list` — trained artifacts under `data/models/`
 - `datasets_list` — local datasets under `data/datasets/` (jsonl/json/csv)
+- `env_install` — run the official Unsloth installer as a tracked job
+  (~2.8 GB; refuses when already configured)
+- `env_studio_start` / `env_studio_stop` — start/stop the Unsloth Studio web
+  UI (port 8888); the server tracks the PID it started and stops only that
 
 Plus Prefab dashboards: `show_training_app` (GPU + jobs) and `show_system_app`
 (environment readiness).
@@ -63,6 +67,15 @@ Plus Prefab dashboards: `show_training_app` (GPU + jobs) and `show_system_app`
 - `UNSLOTH_VRAM_GUARD` — GPU-busy fraction threshold (default 0.85).
 - `OLLAMA_URL` — Ollama endpoint (default `http://127.0.0.1:11434`).
 - `MCP_PORT` / `WEB_PORT` — HTTP mode port (default 11150).
+
+## Environment management (new in 0.1.1)
+
+If `system` reports the environment missing, run `env_install` - it executes
+the official installer (`irm https://unsloth.ai/install.ps1 | iex`) as a job
+with live log progress (10-30 min, ~2.8 GB). Poll `jobs_status` on the
+returned `in-...` job id; after `done` the server re-probes automatically.
+`env_studio_start` launches the Studio web UI on 8888 (first launch ~30-60s);
+`env_studio_stop` kills only the process this server started.
 
 ## Example flows
 

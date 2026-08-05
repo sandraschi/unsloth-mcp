@@ -8,7 +8,9 @@ context bloat while the operation enum acts as a built-in catalog.
 
 from __future__ import annotations
 
+import contextlib
 import json
+import subprocess
 import time
 from pathlib import Path
 from typing import Annotated, Any, Literal
@@ -18,7 +20,7 @@ from pydantic import Field
 
 from unsloth_mcp.app import mcp
 from unsloth_mcp.config import Settings, get_settings, log
-from unsloth_mcp.gpu import gpu_info, system_status
+from unsloth_mcp.gpu import clear_env_cache, gpu_info, ollama_status, studio_status, system_status
 from unsloth_mcp.jobs import get_queue
 from unsloth_mcp.responses import _error_response, ok_response
 
@@ -32,11 +34,16 @@ _OPERATIONS = Literal[
     "jobs_register_ollama",
     "models_list",
     "datasets_list",
+    "env_install",
+    "env_studio_start",
+    "env_studio_stop",
 ]
 
 
 @mcp.tool(
-    annotations={"readonly": True},
+    # Mixed surface (read + mutate): train/cancel/export/install/studio ops
+    # change state, so the tool is NOT read-only as a whole.
+    annotations={"readonly": False},
     version="0.1.0",
 )
 async def unsloth_ops(
@@ -122,7 +129,7 @@ async def unsloth_ops(
     structured envelope with a natural-language message.
 
     ## Operation Map
-     - system - report GPU, VRAM, Unsloth venv, and Ollama status
+     - system - report GPU, VRAM, Unsloth venv, Ollama, and Studio status
      - train - start a LoRA/QLoRA fine-tuning job (dry-run safe: fails cleanly if env missing)
      - jobs_list - list training/export jobs with pagination
      - jobs_status - detail + log tail for one job
@@ -131,6 +138,10 @@ async def unsloth_ops(
      - jobs_register_ollama - register a GGUF file as an Ollama model tag
      - models_list - list trained outputs in the models directory
      - datasets_list - list datasets available for training
+     - env_install - run the official Unsloth installer as a job (big download;
+       refuses when already configured)
+     - env_studio_start - launch the Unsloth Studio web UI (port 8888) if installed
+     - env_studio_stop - stop the Studio server started by this server (tracks its PID)
 
     ## Return Format
     {"success": bool, "message": "natural language summary", "data": {...}}
@@ -177,6 +188,12 @@ async def unsloth_ops(
             return _op_models_list(settings)
         if operation == "datasets_list":
             return _op_datasets_list(settings)
+        if operation == "env_install":
+            return _op_env_install(settings)
+        if operation == "env_studio_start":
+            return _op_env_studio_start(settings)
+        if operation == "env_studio_stop":
+            return _op_env_studio_stop(settings)
     except Exception as exc:
         return _error_response(str(exc), "unsloth_ops")
     return _error_response(f"unknown operation: {operation}", "validation")
@@ -185,10 +202,10 @@ async def unsloth_ops(
 def _op_system(settings: Settings) -> dict:
     status = system_status(settings)
     ollama = None
+    studio = None
     try:
-        from unsloth_mcp.gpu import ollama_status
-
         ollama = ollama_status(settings.ollama_url)
+        studio = studio_status()
     except Exception:
         pass
     data = {
@@ -196,20 +213,128 @@ def _op_system(settings: Settings) -> dict:
         "unsloth_env": status["unsloth_env"],
         "configured": status["configured"],
         "ollama": ollama,
+        "studio": studio,
         "training_procs": status["training_procs"],
         "jobs_running": get_queue(settings).count("running"),
         "jobs_queued": get_queue(settings).count("queued"),
     }
     if not status["configured"]:
         return ok_response(
-            "Unsloth environment not ready - install Unsloth Studio or set UNSLOTH_PYTHON.",
+            "Unsloth environment not ready - run env_install to install it, or set UNSLOTH_PYTHON.",
             data,
         )
     return ok_response(
         f"GPU {data['gpu']['name']} with {data['gpu']['memory_free_mib']} MiB free; "
-        f"unsloth {data['unsloth_env'].get('torch', '?')} ready.",
+        f"unsloth {data['unsloth_env'].get('torch', '?')} ready; "
+        f"studio {'running on 8888' if studio and studio.get('running') else 'stopped'}.",
         data,
     )
+
+
+def _op_env_install(settings: Settings) -> dict:
+    """Run the official Unsloth installer as a background job.
+
+    Downloads ~2.8 GB (PyTorch + Unsloth + llama.cpp prebuilt). The installer
+    is idempotent, but this operation refuses when the environment is already
+    configured - cancel or wait instead. Progress streams to the job log.
+    """
+
+    status = system_status(settings)
+    if status["configured"]:
+        return _error_response(
+            "Unsloth environment is already configured - nothing to install. "
+            "Use env_studio_start to launch the Studio UI.",
+            "already_configured",
+        )
+    queue = get_queue(settings)
+    if queue.count("running") > 0:
+        return _error_response(
+            "another job is running (training uses the same worker) - wait or cancel it first",
+            "busy",
+        )
+    job_id = f"in-{time.strftime('%Y%m%d-%H%M%S')}-{uuid4().hex[:6]}"
+    job = queue.submit(job_id, "install", {"action": "install_unsloth"})
+    # Probe results are stale once the installer finishes - clear the cache.
+    clear_env_cache()
+    return ok_response(
+        f"Install job {job_id} queued. Downloads ~2.8 GB and takes 10-30 "
+        "minutes; poll with jobs_status. The environment is re-probed "
+        "automatically after completion.",
+        {"job_id": job_id, "status": job["status"]},
+    )
+
+
+def _studio_launcher(settings: Settings) -> str | None:
+    """Resolve the unsloth launcher exe from the Unsloth venv."""
+    import os
+    from pathlib import Path
+
+    candidate = Path(settings.unsloth_python).parent / "unsloth.exe"
+    if candidate.exists():
+        return str(candidate)
+    if os.path.exists(r"C:\Users\sandr\.unsloth\studio\unsloth_studio\Scripts\unsloth.exe"):
+        return r"C:\Users\sandr\.unsloth\studio\unsloth_studio\Scripts\unsloth.exe"
+    return None
+
+
+def _op_env_studio_start(settings: Settings) -> dict:
+    """Launch the Unsloth Studio web UI (port 8888) in the background.
+
+    Uses the unsloth.exe launcher from the configured Unsloth venv. The
+    spawned PID is tracked in data/studio.pid so env_studio_stop can kill
+    exactly the process this server started (never a manually-started one).
+    """
+
+    status = studio_status()
+    if status.get("running"):
+        return ok_response("Unsloth Studio is already running.", {"url": status["url"]})
+
+    launcher = _studio_launcher(settings)
+    if not launcher:
+        return _error_response(
+            "Unsloth Studio launcher not found - the environment is not "
+            "installed. Run env_install first.",
+            "not_configured",
+        )
+    pid_file = settings.data_dir / "studio.pid"
+    proc = subprocess.Popen(
+        [launcher, "studio", "-p", "8888"],
+        creationflags=0x08000000,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    pid_file.write_text(str(proc.pid), encoding="utf-8")
+    log(f"[studio] started {launcher} (pid {proc.pid})")
+    return ok_response(
+        "Unsloth Studio starting - give it a few seconds, then open http://127.0.0.1:8888",
+        {"url": "http://127.0.0.1:8888", "pid": proc.pid},
+    )
+
+
+def _op_env_studio_stop(settings: Settings) -> dict:
+    """Stop the Studio server started by this server (tracked PID)."""
+
+    pid_file = settings.data_dir / "studio.pid"
+    if not pid_file.exists():
+        status = studio_status()
+        if status.get("running"):
+            return _error_response(
+                "Studio is running but was not started by this server - stop "
+                "it manually (unsloth studio is in its own terminal).",
+                "not_managed",
+            )
+        return ok_response("Unsloth Studio is not running.", {})
+    pid = int(pid_file.read_text(encoding="utf-8").strip())
+    with contextlib.suppress(OSError, subprocess.SubprocessError):
+        subprocess.run(
+            ["taskkill", "/F", "/T", "/PID", str(pid)],
+            capture_output=True,
+            timeout=15,
+            creationflags=0x08000000,
+        )
+    pid_file.unlink(missing_ok=True)
+    log(f"[studio] stopped pid {pid}")
+    return ok_response(f"Unsloth Studio stopped (pid {pid}).", {"pid": pid})
 
 
 def _op_train(

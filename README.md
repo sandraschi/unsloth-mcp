@@ -18,10 +18,12 @@ environment; the MCP server is the control plane.
 
 ## What You Can Do
 
+- **Install** — missing Unsloth? The dashboard installs it for you (tracked job, ~2.8 GB, live progress)
 - **Train** — start QLoRA fine-tunes on Gemma 4, Qwen3.5, Llama 3.x, gpt-oss, DeepSeek-V4-Flash (GRPO-ready stack)
 - **Monitor** — live job queue: status, logs, loss progress, cancellation
 - **Export** — GGUF quantized models from any finished training run
 - **Serve** — register exports in Ollama; instantly available to every fleet webapp
+- **Studio** — start/stop the Unsloth web UI (port 8888) from the dashboard
 - **Know your GPU** — VRAM headroom and VRAM-guard before every run
 
 ## Quick Install

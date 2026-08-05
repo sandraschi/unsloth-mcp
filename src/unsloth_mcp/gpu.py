@@ -39,6 +39,28 @@ def _cache_set(key: str, value: dict[str, Any]) -> None:
     _CACHE[key] = (time.time(), value)
 
 
+def clear_env_cache() -> None:
+    """Drop cached probe results (e.g. after an environment install)."""
+    _CACHE.clear()
+
+
+def studio_status(url: str = "http://127.0.0.1:8888") -> dict[str, Any]:
+    """Probe the Unsloth Studio web UI (port 8888 by default). Cached for 10s."""
+    key = f"studio:{url}"
+    cached = _cached(key, 10.0)
+    if cached is not None:
+        return cached
+    import httpx
+
+    try:
+        r = httpx.get(url, timeout=3)
+        result = {"running": r.status_code < 500, "url": url, "http": r.status_code}
+    except httpx.HTTPError as exc:
+        result = {"running": False, "url": url, "reason": str(exc)}
+    _cache_set(key, result)
+    return result
+
+
 def gpu_info() -> dict[str, Any]:
     """Query GPU name, driver, VRAM, and utilization via nvidia-smi."""
     smi = shutil.which("nvidia-smi")

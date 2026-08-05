@@ -68,6 +68,22 @@ test.describe("Fleet Audit", () => {
     await expect(page.locator("[data-testid='kpi-jobs']")).toBeAttached();
   });
 
+  test("Help page horizontal tabs switch panels", async ({ page }) => {
+    await page.goto("/help", { timeout: 20000 });
+    await page.waitForTimeout(1500);
+    const tabs = [
+      ["overview", "help-panel-overview"],
+      ["env", "help-panel-env"],
+      ["training", "help-panel-training"],
+      ["tools", "help-panel-tools"],
+      ["troubleshooting", "help-panel-troubleshooting"],
+    ] as const;
+    for (const [tab, panel] of tabs) {
+      await page.locator(`[data-testid='help-tab-${tab}']`).click();
+      await expect(page.locator(`[data-testid='${panel}']`)).toBeAttached();
+    }
+  });
+
   test("Job form submits and appears in list", async ({ page }) => {
     await page.goto("/jobs", { timeout: 20000 });
     await page.waitForTimeout(2000);

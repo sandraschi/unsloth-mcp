@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 import unsloth_mcp.tools  # noqa: F401  (registers all tools at boot)
 from unsloth_mcp.app import SERVER_NAME, mcp
 from unsloth_mcp.config import VERSION, get_settings, log, tail_log
-from unsloth_mcp.gpu import gpu_info, ollama_status, system_status
+from unsloth_mcp.gpu import gpu_info, ollama_status, studio_status, system_status
 from unsloth_mcp.jobs import get_queue
 from unsloth_mcp.tools.unsloth_ops import unsloth_ops
 
@@ -353,6 +353,7 @@ async def logs(n: int = Query(200, ge=1, le=1000)) -> dict[str, Any]:
 async def onboarding_status() -> dict[str, Any]:
     settings = get_settings()
     status = system_status(settings)
+    studio = studio_status()
     return {
         "status": "ok",
         "configured": status["configured"],
@@ -361,13 +362,51 @@ async def onboarding_status() -> dict[str, Any]:
             "unsloth_env": status["unsloth_env"].get("configured", False),
             "ollama": bool(ollama_status(settings.ollama_url).get("configured")),
         },
+        "studio": studio,
         "next_steps": []
         if status["configured"]
         else [
-            "Install Unsloth Studio: irm https://unsloth.ai/install.ps1 | iex",
+            "Run env_install to install Unsloth automatically (~2.8 GB download)",
+            "Or install manually: irm https://unsloth.ai/install.ps1 | iex",
             "Or set UNSLOTH_PYTHON to an unsloth-capable interpreter",
         ],
     }
+
+
+@web_app.post("/api/env/install")
+async def env_install() -> JSONResponse:
+    from unsloth_mcp.tools.unsloth_ops import unsloth_ops
+
+    result = await unsloth_ops(operation="env_install")
+    if not result.get("success"):
+        return _json_error(
+            result.get("error", "install failed"), 409, error_type=result.get("error_type")
+        )
+    return JSONResponse(result, status_code=202)
+
+
+@web_app.post("/api/env/studio/start")
+async def env_studio_start() -> JSONResponse:
+    from unsloth_mcp.tools.unsloth_ops import unsloth_ops
+
+    result = await unsloth_ops(operation="env_studio_start")
+    if not result.get("success"):
+        return _json_error(
+            result.get("error", "studio start failed"), 409, error_type=result.get("error_type")
+        )
+    return JSONResponse(result)
+
+
+@web_app.post("/api/env/studio/stop")
+async def env_studio_stop() -> JSONResponse:
+    from unsloth_mcp.tools.unsloth_ops import unsloth_ops
+
+    result = await unsloth_ops(operation="env_studio_stop")
+    if not result.get("success"):
+        return _json_error(
+            result.get("error", "studio stop failed"), 409, error_type=result.get("error_type")
+        )
+    return JSONResponse(result)
 
 
 # ---------------------------------------------------------------------------

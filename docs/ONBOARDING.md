@@ -40,14 +40,24 @@ It also does not train 32B+ models on a 24 GB GPU — see the VRAM table in
 
 ## 4. First-timer setup steps
 
+**Fastest path — let the server install it:**
+
+1. Clone and start: `git clone https://github.com/sandraschi/unsloth-mcp && cd unsloth-mcp && start.bat`
+2. Open the dashboard at http://127.0.0.1:11151 — a red banner appears when
+   Unsloth is missing.
+3. Click **Install Unsloth (auto, ~2.8 GB)**. The server runs the official
+   installer as a tracked job — live progress in the log, cancelable, no
+   admin rights needed. 10-30 minutes depending on bandwidth.
+4. When the job completes, the banner clears automatically and the
+   environment KPI shows *Ready*.
+5. Optional: click **Start Studio** to open the Unsloth web UI on
+   http://127.0.0.1:8888 (first launch ~30-60s).
+
+**Manual path (alternative):**
+
 1. Install Unsloth: `irm https://unsloth.ai/install.ps1 | iex`
 2. Install Ollama (optional): `winget install Ollama.Ollama`
-3. Clone and start:
-   ```powershell
-   git clone https://github.com/sandraschi/unsloth-mcp
-   cd unsloth-mcp
-   start.bat
-   ```
+3. Clone and start: `git clone https://github.com/sandraschi/unsloth-mcp && cd unsloth-mcp && start.bat`
 4. Open the dashboard at http://127.0.0.1:11151 — the red onboarding banner
    clears once the GPU + Unsloth environment are detected.
 5. Smoke test: Jobs page → model `unsloth/gemma-4-e2b-it`, dataset

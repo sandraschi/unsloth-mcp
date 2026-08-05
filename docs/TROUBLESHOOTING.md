@@ -1,5 +1,24 @@
 # Troubleshooting
 
+## Install job (env_install) fails or stalls
+**Cause**: Network (PyTorch/HuggingFace CDN), disk space (needs 20+ GB free),
+or NVIDIA driver issues mid-download.
+**Fix**: Read the job log tail (`jobs_status` / Jobs page detail). Retry once
+— the installer is idempotent. Verify disk space and that drivers are current.
+The job is cancelable; nothing is half-registered.
+
+## "already_configured" on env_install
+**Cause**: The environment is present — nothing to install.
+**Fix**: Use `env_studio_start` for the Studio UI, or `system` to see what
+is configured.
+
+## Studio won't start or "not_managed" on stop
+**Cause**: First launch takes 30-60s (llama.cpp setup); port 8888 occupied
+by a Studio started manually in another terminal.
+**Fix**: Wait up to 60s and re-check the Dashboard. If you started Studio
+yourself, stop it there — this server only stops the PID it spawned
+(`data/studio.pid`).
+
 ## Jobs stay `queued` forever
 **Cause**: The worker only launches one job at a time and refuses when VRAM
 is busy (guard). Another running job or Ollama-loaded models block it.

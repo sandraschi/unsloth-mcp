@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { type Health, api } from "../api";
-import { KpiCard, PageHeader } from "../components/ui";
+import { KpiCard, PageHeader, StatusBadge } from "../components/ui";
 import { useLLMStore } from "../store/llm";
 
 export default function SettingsPage() {
@@ -8,8 +8,16 @@ export default function SettingsPage() {
   const [onboarding, setOnboarding] = useState<{
     configured: boolean;
     checks: Record<string, boolean>;
+    studio: { running: boolean; url?: string };
     next_steps: string[];
   } | null>(null);
+  const [installJob, setInstallJob] = useState<{
+    id: string;
+    status: string;
+    log_tail: string[];
+  } | null>(null);
+  const [envBusy, setEnvBusy] = useState(false);
+  const [envError, setEnvError] = useState("");
   const {
     providers,
     providerStatus,
@@ -21,17 +29,24 @@ export default function SettingsPage() {
     availableModels,
   } = useLLMStore();
 
+  const refreshOnboarding = useCallback(() => {
+    api
+      .get<{
+        configured: boolean;
+        checks: Record<string, boolean>;
+        studio: { running: boolean; url?: string };
+        next_steps: string[];
+      }>("/api/onboarding/status")
+      .then(setOnboarding)
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     api
       .get<Health>("/api/health")
       .then(setHealth)
       .catch(() => {});
-    api
-      .get<{ configured: boolean; checks: Record<string, boolean>; next_steps: string[] }>(
-        "/api/onboarding/status",
-      )
-      .then(setOnboarding)
-      .catch(() => {});
+    refreshOnboarding();
     api
       .get<{ providers: typeof providers }>("/api/llm/discover")
       .then((r) => {
@@ -42,7 +57,49 @@ export default function SettingsPage() {
         });
       })
       .catch(() => {});
-  }, [setAvailableModels]);
+  }, [refreshOnboarding, setAvailableModels]);
+
+  const startInstall = async () => {
+    setEnvBusy(true);
+    setEnvError("");
+    try {
+      const r = await api.post<{ data: { job_id: string } }>("/api/env/install", {});
+      const poll = async () => {
+        const j = await api.get<{ id: string; status: string; log_tail: string[] }>(
+          `/api/jobs/${r.data.job_id}`,
+        );
+        setInstallJob(j);
+        if (["done", "failed", "cancelled"].includes(j.status)) {
+          setEnvBusy(false);
+          refreshOnboarding();
+          return;
+        }
+        setTimeout(poll, 4000);
+      };
+      poll();
+    } catch (e) {
+      setEnvError(String(e));
+      setEnvBusy(false);
+    }
+  };
+
+  const toggleStudio = async () => {
+    setEnvBusy(true);
+    setEnvError("");
+    try {
+      await api.post(
+        onboarding?.studio.running ? "/api/env/studio/stop" : "/api/env/studio/start",
+        {},
+      );
+      setTimeout(() => {
+        refreshOnboarding();
+        setEnvBusy(false);
+      }, 1500);
+    } catch (e) {
+      setEnvError(String(e));
+      setEnvBusy(false);
+    }
+  };
 
   const selected = providers.find((p) => p.name === selectedProvider);
 
@@ -103,6 +160,75 @@ export default function SettingsPage() {
                   <li key={s}>{s}</li>
                 ))}
               </ul>
+            )}
+          </div>
+
+          <div className="mt-4 border-t border-zinc-800 pt-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-zinc-400">
+                Unsloth Studio{" "}
+                <span className={onboarding?.studio.running ? "text-green-400" : "text-zinc-500"}>
+                  {onboarding?.studio.running ? "running" : "stopped"}
+                </span>
+                {onboarding?.studio.running && (
+                  <a
+                    href={onboarding.studio.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ml-2 text-amber-400 underline"
+                  >
+                    open :8888
+                  </a>
+                )}
+              </span>
+              {onboarding?.configured && (
+                <button
+                  onClick={toggleStudio}
+                  disabled={envBusy}
+                  data-testid="settings-studio-toggle"
+                  className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  {envBusy ? "..." : onboarding.studio.running ? "Stop Studio" : "Start Studio"}
+                </button>
+              )}
+            </div>
+
+            {!onboarding?.configured && (
+              <div className="mt-3">
+                <button
+                  onClick={startInstall}
+                  disabled={envBusy}
+                  data-testid="settings-env-install"
+                  className="w-full rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                >
+                  {envBusy ? "Working..." : "Install Unsloth automatically (~2.8 GB)"}
+                </button>
+                <p className="mt-2 text-xs text-zinc-500">
+                  Runs the official installer as a tracked job - you can watch progress on the
+                  Dashboard. Alternative:{" "}
+                  <code className="rounded bg-zinc-800 px-1">
+                    irm https://unsloth.ai/install.ps1 | iex
+                  </code>
+                </p>
+              </div>
+            )}
+
+            {installJob && (
+              <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono text-zinc-400">{installJob.id}</span>
+                  <StatusBadge status={installJob.status} />
+                </div>
+                <pre className="mt-2 max-h-32 overflow-y-auto font-mono text-[10px] text-zinc-500">
+                  {installJob.log_tail.slice(-8).join("\n") || "waiting for installer output..."}
+                </pre>
+              </div>
+            )}
+
+            {envError && (
+              <div className="mt-3 rounded border border-red-800 bg-red-950/40 p-2 text-xs text-red-300">
+                {envError}
+              </div>
             )}
           </div>
         </section>

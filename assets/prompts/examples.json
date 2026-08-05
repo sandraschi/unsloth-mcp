@@ -1083,5 +1083,51 @@
     "arguments": {
       "operation": "models_list"
     }
+  },
+  {
+    "name": "env-install",
+    "description": "Auto-install Unsloth",
+    "prompt": "Install the Unsloth environment automatically, it is missing",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "env_install"
+    }
+  },
+  {
+    "name": "env-install-progress",
+    "description": "Install job progress",
+    "prompt": "How is the Unsloth install job progressing?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "in-20260805-140000-1n5ta11"
+    }
+  },
+  {
+    "name": "env-studio-start",
+    "description": "Launch Studio UI",
+    "prompt": "Start the Unsloth Studio web interface",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "env_studio_start"
+    }
+  },
+  {
+    "name": "env-studio-stop",
+    "description": "Stop Studio",
+    "prompt": "Stop the Unsloth Studio server",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "env_studio_stop"
+    }
+  },
+  {
+    "name": "env-check-after-install",
+    "description": "Recheck after install",
+    "prompt": "I finished installing - is the environment detected now?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
   }
 ]

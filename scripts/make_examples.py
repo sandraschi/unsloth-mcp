@@ -253,6 +253,18 @@ add("system-var-after-install", "Recheck after install", "I installed Unsloth - 
 add("models-var-delete-hint", "Cleanup big files", "Which model directories are biggest?",
     "unsloth_ops", {"operation": "models_list"})
 
+# env ops
+add("env-install", "Auto-install Unsloth", "Install the Unsloth environment automatically, it is missing",
+    "unsloth_ops", {"operation": "env_install"})
+add("env-install-progress", "Install job progress", "How is the Unsloth install job progressing?",
+    "unsloth_ops", {"operation": "jobs_status", "job_id": "in-20260805-140000-1n5ta11"})
+add("env-studio-start", "Launch Studio UI", "Start the Unsloth Studio web interface",
+    "unsloth_ops", {"operation": "env_studio_start"})
+add("env-studio-stop", "Stop Studio", "Stop the Unsloth Studio server",
+    "unsloth_ops", {"operation": "env_studio_stop"})
+add("env-check-after-install", "Recheck after install", "I finished installing - is the environment detected now?",
+    "unsloth_ops", {"operation": "system"})
+
 out = Path(__file__).resolve().parents[1] / "assets" / "prompts" / "examples.json"
 out.write_text(json.dumps(E, indent=2), encoding="utf-8")
 print(f"wrote {len(E)} examples to {out}")

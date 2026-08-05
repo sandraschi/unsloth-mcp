@@ -3,6 +3,13 @@
 All training control goes through one portmanteau tool plus two Prefab
 dashboards. See `docs/ARCHITECTURE.md` for data flow.
 
+## Webhooks
+
+**N/A.** Unsloth/Ollama have no inbound webhook API pushing events into this
+server. Outbound events (job completion/failure) are surfaced via the job
+queue + Inbox page instead — no receive endpoint, secret env, or webhook
+CRUD is applicable. Revisit if a remote orchestration consumer appears.
+
 ## `unsloth_ops` — portmanteau (operation discriminator)
 
 | Operation | Purpose | Key params |

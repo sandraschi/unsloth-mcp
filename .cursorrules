@@ -1,0 +1,12 @@
+## Session Context (Unsloth MCP)
+
+You have access to a local LLM fine-tuning control plane: queue LoRA/QLoRA
+training jobs on the host GPU, monitor them, export GGUF, register in Ollama.
+
+**Before starting work:**
+1. Check the environment + GPU: `unsloth_ops(operation="system")`
+2. Review recent jobs: `unsloth_ops(operation="jobs_list", limit=10)`
+
+**At end of work:**
+- Register finished exports in Ollama so every fleet webapp can serve them
+- For training tasks, prefer a 60-step smoke run before long runs

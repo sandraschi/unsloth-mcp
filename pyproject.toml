@@ -21,6 +21,16 @@ dev = [
     "pytest>=8.0",
 ]
 
+# uv include-group map syntax requires newer uv; duplicated list keeps the
+# fleet start engine (`uv sync --extra dev`) working on uv 0.9.x while plain
+# `uv sync` still installs the dev group by default.
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.9",
+    "pyright>=1.1.390",
+    "pytest>=8.0",
+]
+
 [tool.uv]
 package = true
 

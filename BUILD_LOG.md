@@ -46,6 +46,7 @@ Running record of builds, regressions, and fixes. Update after every build.
 | 5 | e2e job submit refused | VRAM guard correctly refused while Ollama held the GPU | e2e backend env override `UNSLOTH_VRAM_GUARD=1.0` (declared in playwright.config.ts) |
 | 6 | Prefab cards wrong component API | prefab_ui `Row` is a flex container, not label/value | Switched to `Metric(label=, value=)` |
 | 7 | pyright: ToolResult vs dict returns | Prefab tools annotated `-> dict` but return `ToolResult` | Annotated `-> ToolResult` |
+| 8 | `starts/unsloth-mcp-start.bat` instacrash | Fleet start engine passes `uv sync --extra dev`; pyproject used PEP 735 `[dependency-groups]` only, so `--extra dev` failed ("Extra \`dev\` is not defined") | Added `[project.optional-dependencies] dev = [...]` mirroring the group (uv 0.9.x lacks include-group maps); verified `start.ps1` full stack boots (backend OK, frontend 200, proxied health 200, 3 tools) |
 
 ### Artifacts
 

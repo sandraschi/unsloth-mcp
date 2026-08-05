@@ -3,6 +3,7 @@ const API_BASE = import.meta.env.VITE_API_TARGET || "http://127.0.0.1:11150";
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(15000),
     ...init,
   });
   if (!r.ok) {

@@ -1,0 +1,24 @@
+{
+  "manifest_version": "0.2",
+  "name": "unsloth-mcp",
+  "version": "0.1.0",
+  "description": "Local LLM fine-tuning control plane via Unsloth: train, jobs, models, GGUF export, Ollama register",
+  "author": { "name": "Sandra Schipal" },
+  "server": {
+    "type": "python",
+    "entry_point": "src/unsloth_mcp/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["--directory", "${PWD}", "run", "python", "-m", "unsloth_mcp.server"],
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONPATH": "${PWD}/src"
+      }
+    }
+  },
+  "tools": [
+    { "name": "unsloth_ops", "description": "Portmanteau: system, train, jobs_list, jobs_status, jobs_cancel, jobs_export, jobs_register_ollama, models_list, datasets_list" },
+    { "name": "show_training_app", "description": "Prefab dashboard: GPU + jobs" },
+    { "name": "show_system_app", "description": "Prefab dashboard: environment readiness" }
+  ]
+}

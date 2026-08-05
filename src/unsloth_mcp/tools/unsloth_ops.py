@@ -258,9 +258,9 @@ def _op_train(
     free = _vram_free(settings)
     if free is not None and free < (1.0 - settings.vram_guard_fraction):
         return _error_response(
-            f"VRAM guard active: only {free * 100:.0f}% free (guard requires "
-            f"{settings.vram_guard_fraction * 100:.0f}%). Close other GPU "
-            "workloads or set UNSLOTH_VRAM_GUARD.",
+            f"VRAM guard active: only {free * 100:.0f}% VRAM free (guard refuses "
+            f"jobs when used memory exceeds {settings.vram_guard_fraction * 100:.0f}%). "
+            "Close other GPU workloads (e.g. `ollama stop`) or raise UNSLOTH_VRAM_GUARD.",
             "vram_guard",
         )
 

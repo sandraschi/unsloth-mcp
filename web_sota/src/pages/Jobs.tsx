@@ -86,7 +86,7 @@ export default function Jobs() {
       }));
 
   return (
-    <div>
+    <div data-testid="jobs-page">
       <PageHeader
         title="Training Jobs"
         subtitle="Queue, monitor, and cancel fine-tuning runs"

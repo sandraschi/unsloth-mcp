@@ -1,0 +1,16 @@
+# unsloth-mcp
+
+Local LLM fine-tuning control plane: train LoRA/QLoRA models on your NVIDIA
+GPU with Unsloth, monitor jobs, export GGUF, register in Ollama.
+
+- [README.md](README.md) - overview, quick start
+- [INSTALL.md](INSTALL.md) - all install paths
+- [docs/ONBOARDING.md](docs/ONBOARDING.md) - first-time GPU/Unsloth setup
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - job queue, transports, data flow
+- [docs/TOOLS.md](docs/TOOLS.md) - tool reference (unsloth_ops ops, REST API)
+- [docs/CONFIGURATION.md](docs/CONFIGURATION.md) - env vars
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) - dev setup, gates
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - FAQ
+- [llms-full.txt](llms-full.txt) - full LLM corpus
+
+Ports: backend 11150 (FastAPI + FastMCP `/mcp`), frontend 11151 (Vite).

@@ -1,0 +1,22 @@
+{
+  "name": "unsloth-mcp",
+  "description": "Local LLM fine-tuning control plane via Unsloth: queue LoRA/QLoRA training jobs, monitor, export GGUF, register in Ollama",
+  "version": "0.1.0",
+  "author": {
+    "name": "Sandra Schipal",
+    "url": "https://github.com/sandraschi"
+  },
+  "homepage": "https://github.com/sandraschi/unsloth-mcp",
+  "license": "Apache-2.0",
+  "categories": ["local-llm", "training", "ml"],
+  "tags": ["unsloth", "fine-tuning", "lora", "qlora", "grpo", "gguf", "ollama", "gpu"],
+  "languages": ["python", "typescript"],
+  "runtime": {
+    "python": ">=3.11,<3.14",
+    "gpu": "nvidia"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandraschi/unsloth-mcp"
+  }
+}

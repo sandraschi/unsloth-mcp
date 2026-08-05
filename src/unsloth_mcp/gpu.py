@@ -2,12 +2,16 @@
 
 Reads nvidia-smi when available; all accessors degrade gracefully to
 "unknown" states so the server stays useful on CPU-only machines.
+
+Slow probes (unsloth env import, Ollama) are cached with a TTL so health
+polls stay fast - a cold torch import can take 10-30 seconds.
 """
 
 from __future__ import annotations
 
 import shutil
 import subprocess
+import time
 from typing import Any
 
 
@@ -19,6 +23,20 @@ def _run(cmd: list[str]) -> str:
         return result.stdout
     except (OSError, subprocess.SubprocessError):
         return ""
+
+
+_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+
+
+def _cached(key: str, ttl: float) -> dict[str, Any] | None:
+    hit = _CACHE.get(key)
+    if hit and time.time() - hit[0] < ttl:
+        return hit[1]
+    return None
+
+
+def _cache_set(key: str, value: dict[str, Any]) -> None:
+    _CACHE[key] = (time.time(), value)
 
 
 def gpu_info() -> dict[str, Any]:
@@ -89,15 +107,25 @@ def training_procs() -> list[dict[str, Any]]:
 
 
 def unsloth_env_status(unsloth_python: str) -> dict[str, Any]:
-    """Check the configured Unsloth interpreter exists and imports torch+cuda."""
+    """Check the configured Unsloth interpreter exists and imports torch+cuda.
+
+    Cached for 30s - the probe cold-starts torch (10-30s) and must not block
+    every health poll.
+    """
+    key = f"unsloth_env:{unsloth_python}"
+    cached = _cached(key, 30.0)
+    if cached is not None:
+        return cached
     import os
 
     if not os.path.exists(unsloth_python):
-        return {
+        result = {
             "configured": False,
             "path": unsloth_python,
             "reason": "interpreter not found",
         }
+        _cache_set(key, result)
+        return result
     probe = _run(
         [
             unsloth_python,
@@ -109,7 +137,9 @@ def unsloth_env_status(unsloth_python: str) -> dict[str, Any]:
     )
     lines = [ln.strip() for ln in probe.splitlines() if ln.strip()]
     if len(lines) < 4:
-        return {"configured": False, "path": unsloth_python, "reason": "probe failed"}
+        result = {"configured": False, "path": unsloth_python, "reason": "probe failed"}
+        _cache_set(key, result)
+        return result
     try:
         torch_version, cuda, has_unsloth, has_trl = (
             lines[0],
@@ -118,10 +148,14 @@ def unsloth_env_status(unsloth_python: str) -> dict[str, Any]:
             lines[3] == "True",
         )
     except IndexError:
-        return {"configured": False, "path": unsloth_python, "reason": "probe unparsable"}
+        result = {"configured": False, "path": unsloth_python, "reason": "probe unparsable"}
+        _cache_set(key, result)
+        return result
     if not has_unsloth:
-        return {"configured": False, "path": unsloth_python, "reason": "unsloth package missing"}
-    return {
+        result = {"configured": False, "path": unsloth_python, "reason": "unsloth package missing"}
+        _cache_set(key, result)
+        return result
+    result = {
         "configured": True,
         "path": unsloth_python,
         "torch": torch_version,
@@ -129,20 +163,29 @@ def unsloth_env_status(unsloth_python: str) -> dict[str, Any]:
         "has_unsloth": has_unsloth,
         "has_trl": has_trl,
     }
+    _cache_set(key, result)
+    return result
 
 
 def ollama_status(url: str) -> dict[str, Any]:
-    """Probe the Ollama endpoint (/api/tags)."""
+    """Probe the Ollama endpoint (/api/tags). Cached for 10s."""
+    key = f"ollama:{url}"
+    cached = _cached(key, 10.0)
+    if cached is not None:
+        return cached
     import httpx
 
     try:
         r = httpx.get(f"{url}/api/tags", timeout=3)
         if r.status_code == 200:
             tags = [m.get("name", "") for m in r.json().get("models", [])]
-            return {"configured": True, "models": tags}
-        return {"configured": False, "reason": f"HTTP {r.status_code}"}
+            result = {"configured": True, "models": tags}
+        else:
+            result = {"configured": False, "reason": f"HTTP {r.status_code}"}
     except httpx.HTTPError as exc:
-        return {"configured": False, "reason": str(exc)}
+        result = {"configured": False, "reason": str(exc)}
+    _cache_set(key, result)
+    return result
 
 
 def system_status(settings: Any) -> dict:

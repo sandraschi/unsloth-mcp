@@ -1,0 +1,1087 @@
+[
+  {
+    "name": "system-basic",
+    "description": "Check GPU and environment",
+    "prompt": "Check the GPU and training environment",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
+  },
+  {
+    "name": "system-before-train",
+    "description": "Environment check before training",
+    "prompt": "Is the GPU ready for a training run?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
+  },
+  {
+    "name": "system-vram",
+    "description": "Check VRAM headroom",
+    "prompt": "How much VRAM is free right now?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
+  },
+  {
+    "name": "system-ollama",
+    "description": "Check Ollama reachability",
+    "prompt": "Is Ollama running and what models does it serve?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
+  },
+  {
+    "name": "system-jobs-count",
+    "description": "Count active jobs",
+    "prompt": "How many training jobs are running or queued?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
+  },
+  {
+    "name": "system-unsloth-env",
+    "description": "Unsloth env health",
+    "prompt": "Is the Unsloth environment configured correctly?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
+  },
+  {
+    "name": "train-smoke",
+    "description": "60-step smoke run",
+    "prompt": "Run a quick 60-step validation fine-tune on Gemma 4 E2B with OIG",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "max_steps": 60
+    }
+  },
+  {
+    "name": "train-dolly",
+    "description": "Fine-tune on Dolly",
+    "prompt": "Fine-tune a 12B Gemma on the Dolly dataset for 400 steps",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-12b-it",
+      "dataset": "hf://databricks/databricks-dolly-15k",
+      "max_steps": 400
+    }
+  },
+  {
+    "name": "train-alpaca",
+    "description": "Alpaca instruct tune",
+    "prompt": "Train Llama 3.1 8B on the cleaned Alpaca dataset",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/Llama-3.1-8B-bnb-4bit",
+      "dataset": "hf://yahma/alpaca-cleaned",
+      "max_steps": 300
+    }
+  },
+  {
+    "name": "train-notes",
+    "description": "Train on meeting notes",
+    "prompt": "Fine-tune a small model on my meeting notes so it can answer questions",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "data/datasets/notes.jsonl",
+      "num_train_epochs": 3
+    }
+  },
+  {
+    "name": "train-code",
+    "description": "Code fine-tune",
+    "prompt": "Fine-tune on my code snippets dataset for 200 steps with a 1024 sequence length",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/Qwen3.5-4B",
+      "dataset": "data/datasets/code.jsonl",
+      "max_seq_length": 1024,
+      "max_steps": 200
+    }
+  },
+  {
+    "name": "train-gptoss",
+    "description": "gpt-oss 20B run",
+    "prompt": "Start a gpt-oss 20B QLoRA run on Dolly with batch size 1",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gpt-oss-20b",
+      "dataset": "hf://databricks/databricks-dolly-15k",
+      "per_device_train_batch_size": 1,
+      "max_steps": 250
+    }
+  },
+  {
+    "name": "train-16bit",
+    "description": "16-bit LoRA",
+    "prompt": "Train in 16-bit LoRA (not 4-bit) on a small model",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "load_in_4bit": false,
+      "max_steps": 100
+    }
+  },
+  {
+    "name": "train-higher-lora",
+    "description": "Higher LoRA rank",
+    "prompt": "Fine-tune with LoRA rank 32 and alpha 32",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-12b-it",
+      "dataset": "hf://laion/OIG",
+      "r": 32,
+      "lora_alpha": 32,
+      "max_steps": 200
+    }
+  },
+  {
+    "name": "train-long-context",
+    "description": "Long context run",
+    "prompt": "Train with a 4096 token sequence length",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/Qwen3.5-4B",
+      "dataset": "hf://laion/OIG",
+      "max_seq_length": 4096,
+      "max_steps": 150
+    }
+  },
+  {
+    "name": "train-epochs",
+    "description": "Epoch-based run",
+    "prompt": "Train for exactly 2 epochs over the notes dataset",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "data/datasets/notes.jsonl",
+      "num_train_epochs": 2
+    }
+  },
+  {
+    "name": "train-low-lr",
+    "description": "Low learning rate",
+    "prompt": "Fine-tune carefully with a low learning rate of 5e-5",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/Llama-3.1-8B-bnb-4bit",
+      "dataset": "hf://laion/OIG",
+      "learning_rate": 5e-05,
+      "max_steps": 300
+    }
+  },
+  {
+    "name": "train-accum8",
+    "description": "Higher accumulation",
+    "prompt": "Train with gradient accumulation 8",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "gradient_accumulation_steps": 8,
+      "max_steps": 120
+    }
+  },
+  {
+    "name": "train-batch1",
+    "description": "Single-batch run",
+    "prompt": "Train with batch size 1 to save VRAM",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-12b-it",
+      "dataset": "hf://databricks/databricks-dolly-15k",
+      "per_device_train_batch_size": 1,
+      "max_steps": 400
+    }
+  },
+  {
+    "name": "train-deepseek",
+    "description": "DeepSeek V4 Flash tune",
+    "prompt": "Fine-tune DeepSeek V4 Flash on OIG",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/DeepSeek-V4-Flash",
+      "dataset": "hf://laion/OIG",
+      "max_steps": 200
+    }
+  },
+  {
+    "name": "train-output-dir",
+    "description": "Custom output dir",
+    "prompt": "Train and put the output in a custom directory",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "output_dir": "data/models/custom-run",
+      "max_steps": 60
+    }
+  },
+  {
+    "name": "train-medium",
+    "description": "Medium production run",
+    "prompt": "Run a serious 600-step fine-tune on Qwen3.5 4B with Dolly",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/Qwen3.5-4B",
+      "dataset": "hf://databricks/databricks-dolly-15k",
+      "max_steps": 600,
+      "learning_rate": 0.0002
+    }
+  },
+  {
+    "name": "jobs-list-all",
+    "description": "List all jobs",
+    "prompt": "Show me all training jobs",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_list"
+    }
+  },
+  {
+    "name": "jobs-list-paged",
+    "description": "Paginated job list",
+    "prompt": "List the next page of jobs starting at offset 50",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_list",
+      "limit": 50,
+      "offset": 50
+    }
+  },
+  {
+    "name": "jobs-list-small",
+    "description": "Recent jobs only",
+    "prompt": "Show the 10 most recent jobs",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_list",
+      "limit": 10
+    }
+  },
+  {
+    "name": "jobs-list-max",
+    "description": "Full list",
+    "prompt": "List up to 100 jobs",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_list",
+      "limit": 100
+    }
+  },
+  {
+    "name": "jobs-list-hasmore",
+    "description": "Check for more",
+    "prompt": "Are there more jobs beyond the first page?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_list",
+      "limit": 20,
+      "offset": 0
+    }
+  },
+  {
+    "name": "jobs-status-1",
+    "description": "Check job status",
+    "prompt": "How is training job tr-20260805-023707-01f4b5 going?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-023707-01f4b5"
+    }
+  },
+  {
+    "name": "jobs-status-export",
+    "description": "Check export progress",
+    "prompt": "Is my export job ex-20260805-111222-9a1b2c done?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "ex-20260805-111222-9a1b2c"
+    }
+  },
+  {
+    "name": "jobs-status-log",
+    "description": "Read full log tail",
+    "prompt": "Show me the training log for the latest run",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-023707-01f4b5"
+    }
+  },
+  {
+    "name": "jobs-status-loss",
+    "description": "Check loss trend",
+    "prompt": "Is the loss decreasing in the current run?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-023707-01f4b5"
+    }
+  },
+  {
+    "name": "jobs-status-failed",
+    "description": "Diagnose failed job",
+    "prompt": "Why did my last training job fail?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-021500-77c3d1"
+    }
+  },
+  {
+    "name": "jobs-cancel-stuck",
+    "description": "Cancel stuck job",
+    "prompt": "Cancel the training job that has been running for hours",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "tr-20260805-023707-01f4b5"
+    }
+  },
+  {
+    "name": "jobs-cancel-wrong-data",
+    "description": "Cancel wrong dataset run",
+    "prompt": "Stop the run - I pointed it at the wrong dataset",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "tr-20260805-011000-a1b2c3"
+    }
+  },
+  {
+    "name": "jobs-cancel-queued",
+    "description": "Cancel queued job",
+    "prompt": "Remove that queued job, I changed my mind",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "tr-20260805-010000-q9w8e7"
+    }
+  },
+  {
+    "name": "jobs-cancel-oom",
+    "description": "Cancel OOM run",
+    "prompt": "Kill the run that is OOM thrashing",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "tr-20260804-235959-r5t6y7"
+    }
+  },
+  {
+    "name": "export-q4",
+    "description": "Export q4_k_m",
+    "prompt": "Export the finished training run as a q4_k_m GGUF",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_export",
+      "job_id": "tr-20260805-023707-01f4b5",
+      "quantization_method": "q4_k_m"
+    }
+  },
+  {
+    "name": "export-q8",
+    "description": "Export q8_0",
+    "prompt": "Export my model at q8_0 quality",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_export",
+      "job_id": "tr-20260805-023707-01f4b5",
+      "quantization_method": "q8_0"
+    }
+  },
+  {
+    "name": "export-f16",
+    "description": "Export f16",
+    "prompt": "Export an unquantized f16 GGUF of the trained model",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_export",
+      "job_id": "tr-20260805-023707-01f4b5",
+      "quantization_method": "f16"
+    }
+  },
+  {
+    "name": "export-q5",
+    "description": "Export q5_k_m",
+    "prompt": "Export as q5_k_m for a quality/size middle ground",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_export",
+      "job_id": "tr-20260805-023707-01f4b5",
+      "quantization_method": "q5_k_m"
+    }
+  },
+  {
+    "name": "register-notes",
+    "description": "Register notes model",
+    "prompt": "Put the exported model in Ollama as gemma-notes:q4_k_m",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_register_ollama",
+      "job_id": "ex-20260805-111222-9a1b2c",
+      "model_name_to_register": "gemma-notes:q4_k_m"
+    }
+  },
+  {
+    "name": "register-code",
+    "description": "Register code model",
+    "prompt": "Serve my code fine-tune as qwen-code:q4_k_m in Ollama",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_register_ollama",
+      "job_id": "ex-20260805-113000-c0de01",
+      "model_name_to_register": "qwen-code:q4_k_m"
+    }
+  },
+  {
+    "name": "register-dolly",
+    "description": "Register Dolly tune",
+    "prompt": "Make the Dolly fine-tune available as gemma-dolly:q8_0",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_register_ollama",
+      "job_id": "ex-20260805-114500-d01107",
+      "model_name_to_register": "gemma-dolly:q8_0"
+    }
+  },
+  {
+    "name": "register-alpaca",
+    "description": "Register alpaca tune",
+    "prompt": "Register the Alpaca-tuned Llama as llama-alpaca:q4_k_m",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_register_ollama",
+      "job_id": "ex-20260805-120000-a1paca",
+      "model_name_to_register": "llama-alpaca:q4_k_m"
+    }
+  },
+  {
+    "name": "register-check",
+    "description": "Check registration",
+    "prompt": "Is the exported model already registered in Ollama?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
+  },
+  {
+    "name": "register-deepseek",
+    "description": "Register deepseek tune",
+    "prompt": "Serve my DeepSeek fine-tune as ds4-notes:q4_k_m",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_register_ollama",
+      "job_id": "ex-20260805-121000-d54a1e",
+      "model_name_to_register": "ds4-notes:q4_k_m"
+    }
+  },
+  {
+    "name": "register-gptoss",
+    "description": "Register gpt-oss tune",
+    "prompt": "Register the gpt-oss run as gptoss-dolly:q4_k_m",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_register_ollama",
+      "job_id": "ex-20260805-122000-g0551a",
+      "model_name_to_register": "gptoss-dolly:q4_k_m"
+    }
+  },
+  {
+    "name": "models-list-all",
+    "description": "List all models",
+    "prompt": "What trained models do I have?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "models_list"
+    }
+  },
+  {
+    "name": "models-list-gguf",
+    "description": "GGUF artifacts",
+    "prompt": "Which GGUF files exist and how big are they?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "models_list"
+    }
+  },
+  {
+    "name": "models-list-merged",
+    "description": "Merged checkpoints",
+    "prompt": "List the merged 16-bit model directories",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "models_list"
+    }
+  },
+  {
+    "name": "models-list-cleanup",
+    "description": "Cleanup candidates",
+    "prompt": "Show me model artifacts so I can free disk space",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "models_list"
+    }
+  },
+  {
+    "name": "datasets-list-all",
+    "description": "List datasets",
+    "prompt": "What datasets are available locally?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "datasets_list"
+    }
+  },
+  {
+    "name": "datasets-list-rows",
+    "description": "Dataset row counts",
+    "prompt": "Show me local datasets with their row counts",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "datasets_list"
+    }
+  },
+  {
+    "name": "datasets-list-choose",
+    "description": "Pick a dataset",
+    "prompt": "Which local dataset should I use for a chat tune?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "datasets_list"
+    }
+  },
+  {
+    "name": "prefab-training",
+    "description": "Training dashboard",
+    "prompt": "Show me the training dashboard",
+    "tool": "show_training_app",
+    "arguments": {}
+  },
+  {
+    "name": "prefab-gpu-jobs",
+    "description": "GPU + jobs overview",
+    "prompt": "Give me a visual overview of GPU and jobs",
+    "tool": "show_training_app",
+    "arguments": {}
+  },
+  {
+    "name": "prefab-system",
+    "description": "System dashboard",
+    "prompt": "Show the environment readiness dashboard",
+    "tool": "show_system_app",
+    "arguments": {}
+  },
+  {
+    "name": "prefab-configured",
+    "description": "Config check",
+    "prompt": "Is everything configured? Show the system card",
+    "tool": "show_system_app",
+    "arguments": {}
+  },
+  {
+    "name": "flow-smoke-to-serve",
+    "description": "Smoke to serve loop",
+    "prompt": "Validate with a smoke run, then export and serve",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "max_steps": 60
+    }
+  },
+  {
+    "name": "flow-check-and-list",
+    "description": "Check then list",
+    "prompt": "Check the environment and list jobs",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_list",
+      "limit": 20
+    }
+  },
+  {
+    "name": "train-var-lr1",
+    "description": "learning_rate=1e-4",
+    "prompt": "Fine-tune with learning rate 1e-4",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "learning_rate": 0.0001
+    }
+  },
+  {
+    "name": "train-var-lr3",
+    "description": "learning_rate=3e-4",
+    "prompt": "Train with a slightly higher learning rate of 3e-4",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "learning_rate": 0.0003
+    }
+  },
+  {
+    "name": "train-var-seq512",
+    "description": "sequence 512",
+    "prompt": "Quick run with a short 512-token sequence",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "max_seq_length": 512
+    }
+  },
+  {
+    "name": "train-var-seq1024",
+    "description": "sequence 1024",
+    "prompt": "Train with 1024 token sequences",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "max_seq_length": 1024
+    }
+  },
+  {
+    "name": "train-var-r8",
+    "description": "rank 8",
+    "prompt": "Use a compact LoRA rank of 8",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "r": 8
+    }
+  },
+  {
+    "name": "train-var-r64",
+    "description": "rank 64",
+    "prompt": "Use a large LoRA rank of 64 for more capacity",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "r": 64
+    }
+  },
+  {
+    "name": "train-var-alpha8",
+    "description": "alpha 8",
+    "prompt": "LoRA alpha 8 with rank 8",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "r": 8,
+      "lora_alpha": 8
+    }
+  },
+  {
+    "name": "train-var-batch3",
+    "description": "batch 3",
+    "prompt": "Try batch size 3",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "per_device_train_batch_size": 3
+    }
+  },
+  {
+    "name": "train-var-accum2",
+    "description": "accum 2",
+    "prompt": "Gradient accumulation of 2",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "gradient_accumulation_steps": 2
+    }
+  },
+  {
+    "name": "train-var-steps1000",
+    "description": "1000 steps",
+    "prompt": "A longer 1000-step run",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "max_steps": 1000
+    }
+  },
+  {
+    "name": "train-var-steps25",
+    "description": "25 steps sanity",
+    "prompt": "Tiny 25-step sanity check",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "max_steps": 25
+    }
+  },
+  {
+    "name": "train-var-epochs05",
+    "description": "half epoch",
+    "prompt": "Train for half an epoch",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://laion/OIG",
+      "num_train_epochs": 0.5
+    }
+  },
+  {
+    "name": "train-var-epochs5",
+    "description": "five epochs",
+    "prompt": "Train for five epochs over the small notes set",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "data/datasets/notes.jsonl",
+      "num_train_epochs": 5
+    }
+  },
+  {
+    "name": "train-var-alpaca-batch1",
+    "description": "alpaca batch 1",
+    "prompt": "Alpaca tune at batch size 1",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "hf://yahma/alpaca-cleaned",
+      "per_device_train_batch_size": 1
+    }
+  },
+  {
+    "name": "jobs-status-synth-0",
+    "description": "Poll synthetic job 0",
+    "prompt": "Check the status of job tr-20260805-90000-synthetic0",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-90000-synthetic0"
+    }
+  },
+  {
+    "name": "jobs-status-synth-1",
+    "description": "Poll synthetic job 1",
+    "prompt": "Check the status of job tr-20260805-90100-synthetic1",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-90100-synthetic1"
+    }
+  },
+  {
+    "name": "jobs-status-synth-2",
+    "description": "Poll synthetic job 2",
+    "prompt": "Check the status of job tr-20260805-90200-synthetic2",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-90200-synthetic2"
+    }
+  },
+  {
+    "name": "jobs-status-synth-3",
+    "description": "Poll synthetic job 3",
+    "prompt": "Check the status of job tr-20260805-90300-synthetic3",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-90300-synthetic3"
+    }
+  },
+  {
+    "name": "jobs-status-synth-4",
+    "description": "Poll synthetic job 4",
+    "prompt": "Check the status of job tr-20260805-90400-synthetic4",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-90400-synthetic4"
+    }
+  },
+  {
+    "name": "jobs-status-synth-5",
+    "description": "Poll synthetic job 5",
+    "prompt": "Check the status of job tr-20260805-90500-synthetic5",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-90500-synthetic5"
+    }
+  },
+  {
+    "name": "jobs-status-synth-6",
+    "description": "Poll synthetic job 6",
+    "prompt": "Check the status of job tr-20260805-90600-synthetic6",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-90600-synthetic6"
+    }
+  },
+  {
+    "name": "jobs-status-synth-7",
+    "description": "Poll synthetic job 7",
+    "prompt": "Check the status of job tr-20260805-90700-synthetic7",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_status",
+      "job_id": "tr-20260805-90700-synthetic7"
+    }
+  },
+  {
+    "name": "jobs-cancel-synth-0",
+    "description": "Cancel synthetic export 0",
+    "prompt": "Cancel export job ex-20260805-80000-synth0",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "ex-20260805-80000-synth0"
+    }
+  },
+  {
+    "name": "jobs-cancel-synth-1",
+    "description": "Cancel synthetic export 1",
+    "prompt": "Cancel export job ex-20260805-80100-synth1",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "ex-20260805-80100-synth1"
+    }
+  },
+  {
+    "name": "jobs-cancel-synth-2",
+    "description": "Cancel synthetic export 2",
+    "prompt": "Cancel export job ex-20260805-80200-synth2",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "ex-20260805-80200-synth2"
+    }
+  },
+  {
+    "name": "jobs-cancel-synth-3",
+    "description": "Cancel synthetic export 3",
+    "prompt": "Cancel export job ex-20260805-80300-synth3",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "ex-20260805-80300-synth3"
+    }
+  },
+  {
+    "name": "jobs-cancel-synth-4",
+    "description": "Cancel synthetic export 4",
+    "prompt": "Cancel export job ex-20260805-80400-synth4",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "ex-20260805-80400-synth4"
+    }
+  },
+  {
+    "name": "jobs-cancel-synth-5",
+    "description": "Cancel synthetic export 5",
+    "prompt": "Cancel export job ex-20260805-80500-synth5",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "ex-20260805-80500-synth5"
+    }
+  },
+  {
+    "name": "prefab-then-train",
+    "description": "Dashboard then train",
+    "prompt": "Show the dashboard, then start a smoke run",
+    "tool": "show_training_app",
+    "arguments": {}
+  },
+  {
+    "name": "prefab-after-job",
+    "description": "Dashboard after job",
+    "prompt": "Show me the training dashboard now that my job finished",
+    "tool": "show_training_app",
+    "arguments": {}
+  },
+  {
+    "name": "train-var-mistral",
+    "description": "Ministral 3 vision",
+    "prompt": "Fine-tune Ministral 3 3B on Dolly for 150 steps",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/Ministral-3-3B",
+      "dataset": "hf://databricks/databricks-dolly-15k",
+      "max_steps": 150
+    }
+  },
+  {
+    "name": "train-var-embedding",
+    "description": "Embedding model tune",
+    "prompt": "Fine-tune embeddinggemma on my document pairs",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/embeddinggemma-300M",
+      "dataset": "data/datasets/pairs.jsonl",
+      "max_steps": 100
+    }
+  },
+  {
+    "name": "train-var-tts",
+    "description": "TTS model tune",
+    "prompt": "Train Orpheus TTS 3B on my voice clips",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/Orpheus-3B-0.5-ft",
+      "dataset": "data/datasets/tts.jsonl",
+      "max_steps": 200
+    }
+  },
+  {
+    "name": "register-var-ollama-check",
+    "description": "Verify tag in Ollama",
+    "prompt": "Confirm the model tag exists in Ollama",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
+  },
+  {
+    "name": "register-var-notes2",
+    "description": "Register second variant",
+    "prompt": "Register the v2 run as gemma-notes-v2:q4_k_m",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_register_ollama",
+      "job_id": "ex-20260805-130000-n0t32",
+      "model_name_to_register": "gemma-notes-v2:q4_k_m"
+    }
+  },
+  {
+    "name": "train-var-jsonl-abs",
+    "description": "Absolute jsonl path",
+    "prompt": "Train on the notes at D:/data/notes.jsonl",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-e2b-it",
+      "dataset": "D:/data/notes.jsonl",
+      "max_steps": 80
+    }
+  },
+  {
+    "name": "train-var-qwen-notes",
+    "description": "Qwen on notes",
+    "prompt": "Fine-tune Qwen3.5 4B on my notes dataset",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/Qwen3.5-4B",
+      "dataset": "data/datasets/notes.jsonl",
+      "max_steps": 300
+    }
+  },
+  {
+    "name": "train-var-gemma12-code",
+    "description": "12B on code",
+    "prompt": "Fine-tune Gemma 4 12B on the code snippets dataset",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "train",
+      "model_name": "unsloth/gemma-4-12b-it",
+      "dataset": "data/datasets/code.jsonl",
+      "max_seq_length": 1024,
+      "max_steps": 250
+    }
+  },
+  {
+    "name": "export-var-both",
+    "description": "Export both quantizations",
+    "prompt": "Export my model at q4_k_m and q8_0",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_export",
+      "job_id": "tr-20260805-023707-01f4b5",
+      "quantization_method": "q4_k_m"
+    }
+  },
+  {
+    "name": "cancel-var-then-restart",
+    "description": "Cancel and restart",
+    "prompt": "Cancel the current run and restart it with batch 1",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "jobs_cancel",
+      "job_id": "tr-20260805-023707-01f4b5"
+    }
+  },
+  {
+    "name": "system-var-after-install",
+    "description": "Recheck after install",
+    "prompt": "I installed Unsloth - is it detected now?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "system"
+    }
+  },
+  {
+    "name": "models-var-delete-hint",
+    "description": "Cleanup big files",
+    "prompt": "Which model directories are biggest?",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "models_list"
+    }
+  }
+]

@@ -1,0 +1,85 @@
+# unsloth-mcp — full LLM corpus
+
+## What it is
+
+`unsloth-mcp` is a FastMCP server + webapp that controls local LLM
+fine-tuning on the host's NVIDIA GPU using Unsloth. Agents and users can
+queue LoRA/QLoRA training jobs, monitor them through completion, export
+quantized GGUF artifacts, and register finished models into Ollama so every
+fleet webapp can serve them. Training executes as background subprocesses in
+the Unsloth environment (default: the Unsloth Studio venv) — the MCP server
+process never imports torch/unsloth.
+
+## Environment
+
+- OS: Windows 10/11 64-bit (or Linux/WSL)
+- GPU: NVIDIA RTX 30/40/50 (24 GB recommended; QLoRA up to ~27B, 16-bit LoRA
+  up to ~9B on 24 GB)
+- Unsloth installed (https://unsloth.ai — Studio installer or pip)
+- Ollama optional (serving + GGUF registration)
+- Python 3.11-3.13, uv, Bun (webapp)
+
+## Configuration
+
+| Env var | Default | Purpose |
+|---------|---------|---------|
+| UNSLOTH_PYTHON | C:\Users\sandr\.unsloth\studio\unsloth_studio\Scripts\python.exe | Unsloth interpreter for jobs |
+| UNSLOTH_MCP_DATA | ./data | jobs/models/datasets/db root |
+| UNSLOTH_VRAM_GUARD | 0.85 | refuse jobs when used VRAM fraction exceeds this |
+| OLLAMA_URL | http://127.0.0.1:11434 | Ollama endpoint |
+| MCP_PORT / WEB_PORT | 11150 | HTTP transport port |
+| MCP_HOST | 127.0.0.1 | bind host |
+
+## Tool surface
+
+`unsloth_ops(operation=...)` portmanteau:
+
+- `system` — GPU, VRAM, Unsloth venv, CUDA, Ollama, active jobs
+- `train` — start QLoRA/LoRA job (model_name, dataset [hf://org/name or
+  .jsonl path], max_seq_length, load_in_4bit, r, lora_alpha, batch,
+  gradient_accumulation_steps, max_steps|num_train_epochs, learning_rate,
+  output_dir)
+- `jobs_list(limit, offset)` — paginated jobs
+- `jobs_status(job_id)` — detail + log tail
+- `jobs_cancel(job_id)` — cancel queued/running (kills process tree)
+- `jobs_export(job_id, quantization_method)` — GGUF export job
+- `jobs_register_ollama(job_id, model_name_to_register)` — POST /api/create
+- `models_list` — data/models/ artifacts
+- `datasets_list` — data/datasets/ files
+
+Prefab: `show_training_app`, `show_system_app` (app=True, plain-text fallback).
+
+Returns: `{success, message, data}`; errors carry `error` + `error_type`
+(validation, not_configured, busy, vram_guard, not_found,
+missing_artifact, ollama_error).
+
+## REST API (FastAPI, 11150)
+
+GET /api/health, /api/v1/diagnostics, /api/dashboard, /api/tools,
+/api/skills, /api/skills/{name}, /skill/{name}, /api/jobs, /api/jobs/{id},
+/api/jobs/{id}/log, /api/models, /api/datasets, /api/gpu, /api/logs,
+/api/onboarding/status, /api/llm/discover; POST /api/jobs, /api/llm/chat;
+DELETE /api/jobs/{id}. MCP transport: /mcp (streamable HTTP, FastMCP 3.4.4).
+
+## Job lifecycle
+
+queued → running → done | failed | cancelled. Single worker, VRAM guard,
+subprocess isolation. Server restart marks orphaned jobs failed
+("server restarted"). Logs at data/jobs/{id}.log.
+
+## Webapp (Vite, 11151)
+
+Pages: Dashboard (hero + KPI cards + onboarding CTA), Jobs (create form +
+job list + detail modal + log tail), Models, Datasets, Inbox (completed
+jobs), Tools (dynamic discovery), Skills (SKILL.md render), Chat
+(skill-first, personalities, localStorage history, Ollama proxy), Settings
+(health + LLM providers), Help page, Logs (ring buffer).
+
+## Troubleshooting quick hits
+
+- queued forever → VRAM guard or another job running
+- exit 1 immediately → UNSLOTH_PYTHON missing deps; probe with
+  `& <python> -c "import torch; print(torch.cuda.is_available())"`
+- OOM → batch 1-3, QLoRA, shorter max_seq_length
+- Ollama register 4xx → ollama running? tag shape `name:quant`?
+- port busy → start.ps1 clears 11150/11151 automatically

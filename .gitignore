@@ -28,7 +28,6 @@ build/
 
 # MCPB pack staging (exact copy of src/ for packing - never commit)
 mcpb/src/
-mcpb/
 
 # Data / DB (jobs, sqlite, datasets, models)
 data/

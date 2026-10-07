@@ -49,10 +49,10 @@ export default function Datasets() {
           {error}
         </div>
       )}
-      {loading && <div className="text-sm text-zinc-500">Loading...</div>}
+      {loading && <div className="text-sm text-zinc-300">Loading...</div>}
       <div className="overflow-hidden rounded-xl border border-zinc-800" data-testid="dataset-list">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-900 text-left text-xs uppercase text-zinc-500">
+          <thead className="bg-zinc-900 text-left text-sm uppercase text-zinc-300">
             <tr>
               <th className="px-4 py-2">Name</th>
               <th className="px-4 py-2">Rows (est.)</th>
@@ -64,15 +64,15 @@ export default function Datasets() {
             {datasets.map((d) => (
               <tr key={d.path} className="border-t border-zinc-800">
                 <td className="px-4 py-2 font-medium text-zinc-200">{d.name}</td>
-                <td className="px-4 py-2 text-zinc-400">{d.rows_estimate}</td>
-                <td className="px-4 py-2 text-zinc-400">{d.size_mb} MB</td>
-                <td className="px-4 py-2 font-mono text-xs text-zinc-500">{d.path}</td>
+                <td className="px-4 py-2 text-zinc-300">{d.rows_estimate}</td>
+                <td className="px-4 py-2 text-zinc-300">{d.size_mb} MB</td>
+                <td className="px-4 py-2 font-mono text-sm text-zinc-300">{d.path}</td>
               </tr>
             ))}
           </tbody>
         </table>
         {!loading && datasets.length === 0 && (
-          <div className="border-t border-zinc-800 p-6 text-center text-sm text-zinc-600">
+          <div className="border-t border-zinc-800 p-6 text-center text-sm text-zinc-300">
             Drop .jsonl files into <code className="rounded bg-zinc-800 px-1">data/datasets/</code>{" "}
             (repo root).
           </div>

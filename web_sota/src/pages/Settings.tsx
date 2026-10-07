@@ -139,7 +139,7 @@ export default function SettingsPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-400">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-300">
             Environment status
           </h2>
           <div className="space-y-2 text-sm">
@@ -148,14 +148,14 @@ export default function SettingsPage() {
                 key={k}
                 className="flex items-center justify-between rounded bg-zinc-800/50 px-3 py-2"
               >
-                <span className="text-zinc-400">{k}</span>
+                <span className="text-zinc-300">{k}</span>
                 <span className={v ? "text-green-400" : "text-red-400"}>
                   {v ? "ready" : "missing"}
                 </span>
               </div>
             ))}
             {onboarding && !onboarding.configured && (
-              <ul className="list-inside list-disc space-y-1 pt-2 text-xs text-zinc-500">
+              <ul className="list-inside list-disc space-y-1 pt-2 text-sm text-zinc-300">
                 {onboarding.next_steps.map((s) => (
                   <li key={s}>{s}</li>
                 ))}
@@ -165,9 +165,9 @@ export default function SettingsPage() {
 
           <div className="mt-4 border-t border-zinc-800 pt-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-400">
+              <span className="text-zinc-300">
                 Unsloth Studio{" "}
-                <span className={onboarding?.studio.running ? "text-green-400" : "text-zinc-500"}>
+                <span className={onboarding?.studio.running ? "text-green-400" : "text-zinc-300"}>
                   {onboarding?.studio.running ? "running" : "stopped"}
                 </span>
                 {onboarding?.studio.running && (
@@ -186,7 +186,7 @@ export default function SettingsPage() {
                   onClick={toggleStudio}
                   disabled={envBusy}
                   data-testid="settings-studio-toggle"
-                  className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs hover:bg-zinc-800 disabled:opacity-50"
+                  className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm hover:bg-zinc-800 disabled:opacity-50"
                 >
                   {envBusy ? "..." : onboarding.studio.running ? "Stop Studio" : "Start Studio"}
                 </button>
@@ -203,7 +203,7 @@ export default function SettingsPage() {
                 >
                   {envBusy ? "Working..." : "Install Unsloth automatically (~2.8 GB)"}
                 </button>
-                <p className="mt-2 text-xs text-zinc-500">
+                <p className="mt-2 text-sm text-zinc-300">
                   Runs the official installer as a tracked job - you can watch progress on the
                   Dashboard. Alternative:{" "}
                   <code className="rounded bg-zinc-800 px-1">
@@ -215,18 +215,18 @@ export default function SettingsPage() {
 
             {installJob && (
               <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-zinc-400">{installJob.id}</span>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-mono text-zinc-300">{installJob.id}</span>
                   <StatusBadge status={installJob.status} />
                 </div>
-                <pre className="mt-2 max-h-32 overflow-y-auto font-mono text-[10px] text-zinc-500">
+                <pre className="mt-2 max-h-32 overflow-y-auto font-mono text-sm text-zinc-300">
                   {installJob.log_tail.slice(-8).join("\n") || "waiting for installer output..."}
                 </pre>
               </div>
             )}
 
             {envError && (
-              <div className="mt-3 rounded border border-red-800 bg-red-950/40 p-2 text-xs text-red-300">
+              <div className="mt-3 rounded border border-red-800 bg-red-950/40 p-2 text-sm text-red-300">
                 {envError}
               </div>
             )}
@@ -234,7 +234,7 @@ export default function SettingsPage() {
         </section>
 
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-400">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-300">
             Local LLM providers
           </h2>
           <div className="space-y-2">
@@ -244,11 +244,11 @@ export default function SettingsPage() {
                 className="flex items-center justify-between rounded bg-zinc-800/50 px-3 py-2 text-sm"
               >
                 <span className="text-zinc-300">
-                  {p.name} <span className="text-zinc-600">:{p.port}</span>
+                  {p.name} <span className="text-zinc-300">:{p.port}</span>
                 </span>
                 <span
                   className={
-                    providerStatus[p.name] === "detected" ? "text-green-400" : "text-zinc-600"
+                    providerStatus[p.name] === "detected" ? "text-green-400" : "text-zinc-300"
                   }
                 >
                   {providerStatus[p.name] === "detected"
@@ -257,12 +257,12 @@ export default function SettingsPage() {
                 </span>
               </div>
             ))}
-            {providers.length === 0 && <div className="text-sm text-zinc-600">Probing...</div>}
+            {providers.length === 0 && <div className="text-sm text-zinc-300">Probing...</div>}
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-zinc-500">Provider</label>
+              <label className="text-sm text-zinc-300">Provider</label>
               <select
                 data-testid="llm-provider-select"
                 className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"
@@ -284,7 +284,7 @@ export default function SettingsPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-zinc-500">Model</label>
+              <label className="text-sm text-zinc-300">Model</label>
               <select
                 data-testid="llm-model-select"
                 className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"

@@ -19,7 +19,7 @@ function Code({ children }: { children: string }) {
 
 function H2({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-zinc-400 first:mt-0">
+    <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-zinc-300 first:mt-0">
       {children}
     </h2>
   );
@@ -50,7 +50,7 @@ export default function Help() {
             className={`rounded-t-lg border-b-2 px-4 py-2 text-sm transition-colors ${
               tab === t.id
                 ? "border-amber-500 text-amber-400"
-                : "border-transparent text-zinc-400 hover:text-zinc-200"
+                : "border-transparent text-zinc-300 hover:text-zinc-200"
             }`}
           >
             {t.label}
@@ -220,15 +220,15 @@ export default function Help() {
             </li>
           </ul>
           <H2>3. Hyperparameters (sane defaults)</H2>
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-700 text-zinc-500">
+              <tr className="border-b border-zinc-700 text-zinc-300">
                 <th className="py-1 pr-3">Setting</th>
                 <th className="py-1 pr-3">Default</th>
                 <th className="py-1">When to change</th>
               </tr>
             </thead>
-            <tbody className="text-zinc-400">
+            <tbody className="text-zinc-300">
               <tr>
                 <td className="py-1 pr-3">r / lora_alpha</td>
                 <td className="py-1 pr-3">16 / 16</td>
@@ -291,15 +291,15 @@ export default function Help() {
           <p>
             Everything flows through one tool with an <Code>operation</Code> discriminator:
           </p>
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-700 text-zinc-500">
+              <tr className="border-b border-zinc-700 text-zinc-300">
                 <th className="py-1 pr-3">Operation</th>
                 <th className="py-1 pr-3">Purpose</th>
                 <th className="py-1">Key args</th>
               </tr>
             </thead>
-            <tbody className="text-zinc-400">
+            <tbody className="text-zinc-300">
               <tr>
                 <td className="py-1 pr-3 font-mono">system</td>
                 <td className="py-1 pr-3">GPU/VRAM/env/Ollama/Studio status</td>

@@ -46,23 +46,23 @@ export default function Models() {
           {error}
         </div>
       )}
-      {loading && <div className="text-sm text-zinc-500">Loading...</div>}
+      {loading && <div className="text-sm text-zinc-300">Loading...</div>}
       <div className="grid gap-3 md:grid-cols-2" data-testid="model-list">
         {models.map((m) => (
           <div key={m.path} className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
             <div className="flex items-center justify-between">
-              <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-zinc-400">
+              <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-sm font-semibold uppercase text-zinc-300">
                 {m.kind}
               </span>
               {m.size_mb !== undefined && (
-                <span className="text-xs text-zinc-500">{m.size_mb} MB</span>
+                <span className="text-sm text-zinc-300">{m.size_mb} MB</span>
               )}
             </div>
-            <div className="mt-2 break-all font-mono text-xs text-zinc-300">{m.path}</div>
+            <div className="mt-2 break-all font-mono text-sm text-zinc-300">{m.path}</div>
           </div>
         ))}
         {!loading && models.length === 0 && (
-          <div className="rounded-lg border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-600">
+          <div className="rounded-lg border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-300">
             No trained models yet - complete a training job to see artifacts here.
           </div>
         )}

@@ -121,11 +121,11 @@ export default function Dashboard() {
                 <span className="font-mono text-red-200">{installJob.id}</span>
                 <StatusBadge status={installJob.status} />
               </div>
-              <div className="mt-2 text-xs text-red-300/80">
+              <div className="mt-2 text-sm text-red-300/80">
                 Downloading ~2.8 GB (PyTorch + Unsloth + llama.cpp). This takes 10-30 minutes - live
                 progress in the job log below.
               </div>
-              <pre className="mt-2 max-h-40 overflow-y-auto rounded bg-zinc-950 p-2 font-mono text-[10px] text-zinc-400">
+              <pre className="mt-2 max-h-40 overflow-y-auto rounded bg-zinc-950 p-2 font-mono text-sm text-zinc-300">
                 {installJob.log_tail.slice(-12).join("\n") || "waiting for installer output..."}
               </pre>
             </div>
@@ -217,7 +217,7 @@ export default function Dashboard() {
       </div>
 
       {mock && (
-        <div className="mt-4 rounded border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-500">
+        <div className="mt-4 rounded border border-zinc-800 bg-zinc-900/40 p-3 text-sm text-zinc-300">
           <MockBadge /> Sample data shown until the Unsloth environment is configured - real stats
           replace these once onboarding completes.
         </div>

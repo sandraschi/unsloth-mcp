@@ -40,7 +40,7 @@ export default function Skills() {
             </button>
           ))}
           {skills.length === 0 && (
-            <div className="text-sm text-zinc-600">No skills registered.</div>
+            <div className="text-sm text-zinc-300">No skills registered.</div>
           )}
         </div>
       </div>
@@ -53,7 +53,7 @@ export default function Skills() {
             <ReactMarkdown>{content}</ReactMarkdown>
           </div>
         ) : (
-          <div className="text-sm text-zinc-600">Select a skill to read its instructions.</div>
+          <div className="text-sm text-zinc-300">Select a skill to read its instructions.</div>
         )}
       </div>
     </div>

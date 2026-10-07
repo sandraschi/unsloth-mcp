@@ -28,16 +28,16 @@ export default function Tools() {
           {error}
         </div>
       )}
-      {loading && <div className="text-sm text-zinc-500">Loading...</div>}
+      {loading && <div className="text-sm text-zinc-300">Loading...</div>}
       <div className="grid gap-3 md:grid-cols-2" data-testid="tool-list">
         {tools.map((t) => (
           <div key={t.name} className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
             <div className="font-mono text-sm font-medium text-amber-400">{t.name}</div>
-            <p className="mt-1 line-clamp-3 text-xs text-zinc-400">{t.description}</p>
+            <p className="mt-1 line-clamp-3 text-sm text-zinc-300">{t.description}</p>
           </div>
         ))}
         {!loading && tools.length === 0 && (
-          <div className="rounded-lg border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-600">
+          <div className="rounded-lg border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-300">
             No tools reported by the backend.
           </div>
         )}

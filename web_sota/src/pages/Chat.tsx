@@ -1,6 +1,6 @@
 import { Download, Eraser, Send, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { api } from "../api";
+import { api, postStream } from "../api";
 import { PageHeader } from "../components/ui";
 import { useLLMStore } from "../store/llm";
 
@@ -113,7 +113,7 @@ export default function Chat() {
   const buildSystem = () => {
     const skill =
       skillText ||
-      "You are controlling unsloth-mcp, a local LLM fine-tuning server. Tools: unsloth_ops (system, train, jobs_list, jobs_status, jobs_cancel, jobs_export, jobs_register_ollama, models_list, datasets_list).";
+      "You are controlling unsloth-mcp, a local LLM fine-tuning server. Tools: unsloth_ops (system, train, jobs_list, jobs_status, jobs_cancel, jobs_export, jobs_register_ollama, models_list, datasets_list, env_install, env_studio_start, env_studio_stop, shutdown).";
     if (personality === "custom") return customPrompt || skill;
     return `${skill}\n\n---\n\n## Role\n${PERSONALITIES[personality].prompt}`;
   };
@@ -129,24 +129,55 @@ export default function Chat() {
     setInput("");
     setBusy(true);
     setError("");
+    const payload = {
+      messages: [
+        { role: "system", content: buildSystem() },
+        ...history.map(({ role, content }) => ({ role, content })),
+      ],
+      model: selectedModel || undefined,
+    };
+    const stamp = () => new Date().toISOString();
+    // Streaming first (POST /api/llm/chat/stream, SSE); non-streaming fallback
+    // when the backend predates /stream or the stream dies before any chunk.
+    setMessages((m) => [...m, { role: "assistant", content: "", ts: stamp() }]);
     try {
-      const r = await api.post<{ content: string; model?: string }>("/api/llm/chat", {
-        messages: [
-          { role: "system", content: buildSystem() },
-          ...history.map(({ role, content }) => ({ role, content })),
-        ],
-        model: selectedModel || undefined,
-      });
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: r.content, ts: new Date().toISOString() },
-      ]);
+      let acc = "";
+      let gotChunk = false;
+      for await (const chunk of postStream<{ content?: string; error?: string }>(
+        "/api/llm/chat/stream",
+        payload,
+      )) {
+        if (chunk.error) throw new Error(chunk.error);
+        if (chunk.content) {
+          gotChunk = true;
+          acc += chunk.content;
+          const snap = acc;
+          setMessages((m) => {
+            const c = [...m];
+            c[c.length - 1] = { ...c[c.length - 1], content: snap };
+            return c;
+          });
+        }
+      }
+      if (!gotChunk) throw new Error("empty stream");
     } catch (e) {
-      setError(`Chat failed (Ollama reachable?): ${e}`);
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: `Error: ${e}`, ts: new Date().toISOString() },
-      ]);
+      try {
+        const r = await api.post<{ content: string; model?: string }>("/api/llm/chat", payload);
+        const content = r.content;
+        setMessages((m) => {
+          const c = [...m];
+          c[c.length - 1] = { role: "assistant", content, ts: stamp() };
+          return c;
+        });
+      } catch (e2) {
+        setError(`Chat failed (Ollama reachable?): ${e2}`);
+        const content = `Error: ${e2}`;
+        setMessages((m) => {
+          const c = [...m];
+          c[c.length - 1] = { role: "assistant", content, ts: stamp() };
+          return c;
+        });
+      }
     } finally {
       setBusy(false);
     }
@@ -179,7 +210,7 @@ export default function Chat() {
           <div className="flex items-center gap-2" data-testid="chat-controls">
             <select
               data-testid="personality-select"
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-xs"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm"
               value={personality}
               onChange={(e) => {
                 setPersonality(e.target.value);
@@ -194,7 +225,7 @@ export default function Chat() {
             </select>
             {personality === "custom" && (
               <input
-                className="w-56 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-xs"
+                className="w-56 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm"
                 placeholder="Custom system prompt"
                 value={customPrompt}
                 onChange={(e) => {
@@ -221,7 +252,7 @@ export default function Chat() {
             >
               <Eraser className="h-4 w-4" />
             </button>
-            <span className={`text-xs ${detected ? "text-green-400" : "text-red-400"}`}>
+            <span className={`text-sm ${detected ? "text-green-400" : "text-red-400"}`}>
               {detected
                 ? `${provider?.name ?? "ollama"} on :${provider?.port ?? 11434}`
                 : "Ollama not detected"}
@@ -231,18 +262,18 @@ export default function Chat() {
       />
 
       {skillText && (
-        <div className="mb-3 flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-400">
+        <div className="mb-3 flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-sm text-zinc-300">
           <Sparkles className="h-3.5 w-3.5 text-amber-500" />
           skill: unsloth-trainer loaded as base preprompt
         </div>
       )}
 
       {detected && (provider?.models.length ?? 0) > 0 && (
-        <div className="mb-3 flex items-center gap-2 text-xs">
-          <span className="text-zinc-500">Model:</span>
+        <div className="mb-3 flex items-center gap-2 text-sm">
+          <span className="text-zinc-300">Model:</span>
           <select
             data-testid="llm-model-select"
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs"
+            className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-sm"
             value={selectedModel}
             onChange={(e) => {
               setSelectedModel(e.target.value);
@@ -272,14 +303,14 @@ export default function Chat() {
             </div>
           </div>
         ))}
-        {busy && <div className="text-sm text-zinc-500">Thinking...</div>}
-        {error && !busy && <div className="text-xs text-red-400">{error}</div>}
+        {busy && <div className="text-sm text-zinc-300">Thinking...</div>}
+        {error && !busy && <div className="text-sm text-red-400">{error}</div>}
         {!messages.length && !busy && (
           <div data-testid="example-prompts" className="space-y-3">
-            <div className="text-sm text-zinc-500">Try one of these:</div>
+            <div className="text-sm text-zinc-300">Try one of these:</div>
             {EXAMPLE_PROMPTS.map((g) => (
               <div key={g.group}>
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-zinc-300">
                   {g.group}
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -287,7 +318,7 @@ export default function Chat() {
                     <button
                       key={p}
                       onClick={() => setInput(p)}
-                      className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+                      className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300 hover:bg-zinc-800"
                     >
                       {p}
                     </button>

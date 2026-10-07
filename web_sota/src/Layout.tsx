@@ -77,14 +77,14 @@ export default function Layout() {
             {!collapsed && (
               <div>
                 <div className="text-sm font-semibold">Unsloth MCP</div>
-                <div className="text-[10px] text-zinc-500">v0.1.0</div>
+                <div className="text-sm text-zinc-300">v0.1.0</div>
               </div>
             )}
           </div>
           <button
             onClick={() => setCollapsed((c) => !c)}
             data-testid="sidebar-collapse"
-            className="rounded p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+            className="rounded p-1 text-zinc-300 hover:bg-zinc-800 hover:text-white"
             title={collapsed ? "Expand" : "Collapse"}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -100,7 +100,7 @@ export default function Layout() {
                 `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   isActive
                     ? "bg-amber-500/10 text-amber-400"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                    : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
                 }`
               }
               title={label}
@@ -118,12 +118,12 @@ export default function Layout() {
                 healthOk === null ? "bg-zinc-500" : healthOk ? "bg-green-500" : "bg-red-500"
               }`}
             />
-            <span className="text-xs text-zinc-400">
+            <span className="text-sm text-zinc-300">
               {healthOk === null ? "Connecting..." : healthOk ? "Connected" : "Offline"}
             </span>
           </div>
           {health && (
-            <div className="mt-1 text-[10px] text-zinc-600">
+            <div className="mt-1 text-sm text-zinc-300">
               {health.tool_count} tools · {health.server} {health.version}
             </div>
           )}
@@ -137,7 +137,7 @@ export default function Layout() {
         >
           <div className="text-sm font-medium text-zinc-300">Local Fine-Tuning Control Plane</div>
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 text-xs text-zinc-400">
+            <span className="flex items-center gap-1.5 text-sm text-zinc-300">
               <span
                 className={`h-2 w-2 rounded-full ${healthOk ? "bg-green-500" : "bg-red-500"}`}
               />

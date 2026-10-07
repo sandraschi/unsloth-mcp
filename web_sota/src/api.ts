@@ -1,4 +1,19 @@
-const API_BASE = import.meta.env.VITE_API_TARGET || "http://127.0.0.1:11150";
+// Fleet API base (CORS rule): same-origin relative ("") everywhere EXCEPT
+// behind a Tauri gate. The vite dev proxy forwards /api + /mcp to the
+// backend; an absolute http://127.0.0.1:11150 URL works from localhost tabs
+// only and dies on CORS from any other hostname (LAN, Tailscale, goliath).
+declare global {
+  interface Window {
+    __TAURI__?: unknown;
+    __TAURI_INTERNALS__?: unknown;
+  }
+}
+
+const IS_TAURI =
+  typeof window !== "undefined" &&
+  (window.__TAURI__ !== undefined || window.__TAURI_INTERNALS__ !== undefined);
+
+const API_BASE = import.meta.env.VITE_API_TARGET || (IS_TAURI ? "http://127.0.0.1:11150" : "");
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(`${API_BASE}${path}`, {
@@ -17,6 +32,37 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(detail);
   }
   return (await r.json()) as T;
+}
+
+/** POST an SSE endpoint (`data:` events, `data: [DONE]` terminator). */
+export async function* postStream<T>(path: string, body: unknown): AsyncGenerator<T> {
+  const r = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok || !r.body) throw new Error(`HTTP ${r.status}`);
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let idx = buf.indexOf("\n\n");
+    while (idx >= 0) {
+      const evt = buf.slice(0, idx);
+      buf = buf.slice(idx + 2);
+      for (const line of evt.split("\n")) {
+        if (line.startsWith("data:")) {
+          const data = line.slice(5).trim();
+          if (data === "[DONE]") return;
+          yield JSON.parse(data) as T;
+        }
+      }
+      idx = buf.indexOf("\n\n");
+    }
+  }
 }
 
 export const api = {

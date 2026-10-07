@@ -26,6 +26,7 @@ CRUD is applicable. Revisit if a remote orchestration consumer appears.
 | `env_install` | Run the official Unsloth installer as a job (~2.8 GB, 10-30 min; refuses when already configured) | — |
 | `env_studio_start` | Launch Unsloth Studio web UI (port 8888) | — |
 | `env_studio_stop` | Stop the Studio started by this server (tracked PID; never a manually-started one) | — |
+| `shutdown` | Orderly self-termination for the fleet launcher (exits ~0.5s later) | — |
 
 ### Examples
 
@@ -93,5 +94,11 @@ Environment readiness: configured flag, Unsloth venv path, torch/CUDA.
 | `GET /api/gpu` | Raw nvidia-smi data |
 | `GET /api/logs` | Server ring log |
 | `GET /api/onboarding/status` | Configured flag + check breakdown |
+| `GET /api/capabilities` | Tools, endpoints, feature flags, ports (standard shape) |
+| `POST /api/shutdown` | Orderly exit for the fleet launcher (200, then exit) |
 | `GET /api/llm/discover` | Ollama / LM Studio / vLLM probes |
+| `GET /api/llm/providers` | Provider registry (local detected + cloud configured, never keys) |
+| `GET /api/llm/models?provider=ollama` | Live model list, curated fallback when offline |
+| `GET /api/llm/onboarding` | Starter facts + recommended path for the hero cue |
 | `POST /api/llm/chat` | Ollama chat proxy (Chat page) |
+| `POST /api/llm/chat/stream` | SSE streaming chat proxy (Chat page, non-stream fallback) |

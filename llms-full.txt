@@ -46,8 +46,10 @@ process never imports torch/unsloth.
 - `jobs_register_ollama(job_id, model_name_to_register)` — POST /api/create
 - `models_list` — data/models/ artifacts
 - `datasets_list` — data/datasets/ files
+- `shutdown` — orderly self-termination for the fleet launcher
 
 Prefab: `show_training_app`, `show_system_app` (app=True, plain-text fallback).
+Resource: `config://unsloth-mcp/settings`. Prompt: `unsloth_train` (smoke-run template).
 
 Returns: `{success, message, data}`; errors carry `error` + `error_type`
 (validation, not_configured, busy, vram_guard, not_found,
@@ -55,11 +57,12 @@ missing_artifact, ollama_error).
 
 ## REST API (FastAPI, 11150)
 
-GET /api/health, /api/v1/diagnostics, /api/dashboard, /api/tools,
+GET /api/health, /health, /api/v1/diagnostics, /api/capabilities, /api/dashboard, /api/tools,
 /api/skills, /api/skills/{name}, /skill/{name}, /api/jobs, /api/jobs/{id},
 /api/jobs/{id}/log, /api/models, /api/datasets, /api/gpu, /api/logs,
-/api/onboarding/status, /api/llm/discover; POST /api/jobs, /api/llm/chat;
-DELETE /api/jobs/{id}. MCP transport: /mcp (streamable HTTP, FastMCP 3.4.4).
+/api/onboarding/status, /api/llm/discover, /api/llm/providers, /api/llm/models,
+/api/llm/onboarding; POST /api/jobs, /api/llm/chat, /api/llm/chat/stream (SSE),
+/api/shutdown; DELETE /api/jobs/{id}. MCP transport: /mcp (streamable HTTP, FastMCP 3.4.4).
 
 ## Job lifecycle
 

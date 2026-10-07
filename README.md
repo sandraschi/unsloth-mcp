@@ -1,5 +1,7 @@
 # unsloth-mcp
 
+![just](https://img.shields.io/badge/just-ci-green) ![ruff](https://img.shields.io/badge/ruff-clean-green) ![python](https://img.shields.io/badge/python-3.11--3.13-blue) ![fastmcp](https://img.shields.io/badge/fastmcp-3.4-purple) ![uvicorn](https://img.shields.io/badge/uvicorn-served-blue)
+
 Local LLM **fine-tuning** for the fleet: train LoRA/QLoRA models on your
 NVIDIA GPU with Unsloth, monitor jobs, export GGUF, and register finished
 models into Ollama — all from Claude Desktop, Cursor, or the webapp.
@@ -55,6 +57,41 @@ uv run python -m unsloth_mcp.server
 | [Tool Reference](docs/TOOLS.md) | All available tools and operations |
 | [Development](docs/DEVELOPMENT.md) | Contributing, local setup |
 | [Troubleshooting](docs/TROUBLESHOOTING.md) | Common issues |
+
+## Stack
+
+Backend: Python 3.11-3.13, FastMCP 3.4, FastAPI + uvicorn, SQLite job queue.
+Frontend (`web_sota/`): React 19 + Vite 6 + TailwindCSS 4 + Lucide + Framer
+Motion + Zustand + React Router. Tests: pytest + Playwright.
+
+## Tools
+
+| MCP tool | Ops |
+|----------|-----|
+| `unsloth_ops(operation=...)` | `system`, `train`, `jobs_list`, `jobs_status`, `jobs_cancel`, `jobs_export`, `jobs_register_ollama`, `models_list`, `datasets_list`, `env_install`, `env_studio_start`, `env_studio_stop`, `shutdown` |
+| `show_training_app` / `show_system_app` | Prefab dashboards (in-chat UI) |
+
+REST: `GET /api/health`, `/api/v1/diagnostics`, `/api/capabilities`,
+`/api/jobs`, `/api/models`, `/api/datasets`, `/api/gpu`, `/api/logs`,
+`/api/skills`, `/api/llm/discover|providers|models|onboarding`,
+`POST /api/llm/chat|/stream`, `POST /api/shutdown`. MCP transport: `/mcp`.
+Full reference: [Tool Reference](docs/TOOLS.md), [llms-full.txt](llms-full.txt).
+
+## Ports & env
+
+Backend 11150 (FastAPI + FastMCP `/mcp`), frontend 11151 (Vite). Registered in
+`mcp-central-docs/operations/WEBAPP_PORTS.md`.
+
+| Env var | Default | Purpose |
+|---------|---------|---------|
+| `UNSLOTH_PYTHON` | Unsloth Studio venv | Interpreter that runs training jobs |
+| `UNSLOTH_MCP_DATA` | `./data` | jobs/models/datasets/db root |
+| `UNSLOTH_VRAM_GUARD` | `0.85` | refuse jobs above this VRAM fraction |
+| `UNSLOTH_DAEMON_PROXY` | `1` | stdio proxies to a live daemon (no double SQLite writers) |
+| `OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama endpoint |
+| `MCP_PORT` / `WEB_PORT` | `11150` | HTTP transport port |
+
+Claude Desktop config snippet: see [Installation](INSTALL.md).
 
 ## Requirements
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.1 (2026-10-07)
+
+- Assfix pass: launcher contract restored (ports 11150/11151, uvicorn-web-app,
+  relative WebRoot); manifest `${PWD}` -> `${__dirname}` (both copies)
+- New surface: `shutdown` op, `config://unsloth-mcp/settings` resource,
+  `unsloth_train` prompt, `output_schema` on `unsloth_ops`
+- New REST: `/health` alias, `/api/capabilities`, `/api/llm/providers|models|onboarding`,
+  `POST /api/llm/chat/stream` (SSE), `POST /api/shutdown`
+- Webapp: same-origin API base + Tauri gate, streaming Chat with fallback,
+  font/contrast sweep (text-sm + zinc-300 minimums)
+- stdio probe/proxy: second processes proxy a live daemon (no double SQLite writers)
+- Repo hygiene: pre-commit + ps51 gate + biome hook, `just bootstrap`/`certify`/
+  `cua-webapp-test`, session injection (Claude/Cursor/Windsurf/Copilot/OpenCode/
+  Antigravity), renovate.json, T20 lint, glama tool list
+
 ## 0.1.0 (2026-08-05)
 
 - Initial release: local LLM fine-tuning control plane

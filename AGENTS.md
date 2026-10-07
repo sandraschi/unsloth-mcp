@@ -22,8 +22,9 @@ just serve                    # MCP server (stdio only)
 | `src/unsloth_mcp/http_app.py` | FastAPI + `/mcp` mount (FastMCP 3.4.4 lifespan pitfall handled) |
 | `src/unsloth_mcp/jobs.py` | SQLite job queue + worker + VRAM guard |
 | `src/unsloth_mcp/gpu.py` | nvidia-smi / unsloth env / ollama probes |
-| `src/unsloth_mcp/tools/unsloth_ops.py` | Portmanteau (9 ops) |
+| `src/unsloth_mcp/tools/unsloth_ops.py` | Portmanteau (13 ops) |
 | `src/unsloth_mcp/tools/prefab_cards.py` | Prefab dashboards |
+| `src/unsloth_mcp/tools/meta.py` | MCP resource + prompt |
 | `scripts/train_job.py`, `scripts/export_job.py` | Run in Unsloth venv (standalone, no server imports) |
 | `web_sota/src/pages/` | 11 SOTA pages (Jobs is the domain core) |
 | `data/` | gitignored: jobs, models, datasets, db |
@@ -37,6 +38,16 @@ just serve                    # MCP server (stdio only)
 - `UNSLOTH_TEST_DISABLE_WORKER=1` disables the job worker in tests (declared double)
 - Gates: `just ci` must be green (ruff, pyright, pytest, tsc, biome)
 - Ports 11150/11151 registered in mcp-central-docs/operations/WEBAPP_PORTS.md
+
+## HTTP daemon + stdio proxy (SQLite single-writer)
+
+- Backend: FastAPI on 11150 (`GET /api/health`, `POST /api/shutdown`).
+  No NSSM service; `start.ps1` launches the daemon for the webapp.
+- `server.py` stdio entry probes `GET /api/health` first: when the daemon is
+  live it serves stdio via `FastMCP.as_proxy(<daemon>/mcp)` instead of opening
+  `data/unsloth.db` a second time (split-brain guard). Disable the probe with
+  `UNSLOTH_DAEMON_PROXY=0`.
+- Never run two HTTP daemons (or daemon + direct-stdio writer) at once.
 
 ## Reading order
 

@@ -1129,5 +1129,14 @@
     "arguments": {
       "operation": "system"
     }
+  },
+  {
+    "name": "shutdown-server",
+    "description": "Orderly self-termination for the fleet launcher",
+    "prompt": "Shut the server down cleanly so the launcher can restart it",
+    "tool": "unsloth_ops",
+    "arguments": {
+      "operation": "shutdown"
+    }
   }
 ]

@@ -30,9 +30,11 @@ discriminator:
   (~2.8 GB; refuses when already configured)
 - `env_studio_start` / `env_studio_stop` — start/stop the Unsloth Studio web
   UI (port 8888); the server tracks the PID it started and stops only that
+- `shutdown` — orderly self-termination for the fleet launcher
 
 Plus Prefab dashboards: `show_training_app` (GPU + jobs) and `show_system_app`
-(environment readiness).
+(environment readiness), resource `config://unsloth-mcp/settings`, and prompt
+`unsloth_train` (QLoRA smoke-run template).
 
 ## Best practices
 
@@ -67,6 +69,8 @@ Plus Prefab dashboards: `show_training_app` (GPU + jobs) and `show_system_app`
 - `UNSLOTH_VRAM_GUARD` — GPU-busy fraction threshold (default 0.85).
 - `OLLAMA_URL` — Ollama endpoint (default `http://127.0.0.1:11434`).
 - `MCP_PORT` / `WEB_PORT` — HTTP mode port (default 11150).
+- `UNSLOTH_DAEMON_PROXY` — stdio proxies to a live daemon instead of opening
+  the job DB twice (default 1; set 0 to force direct stdio).
 
 ## Environment management (new in 0.1.1)
 

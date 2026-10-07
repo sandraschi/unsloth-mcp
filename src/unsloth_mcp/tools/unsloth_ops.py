@@ -19,7 +19,7 @@ from uuid import uuid4
 from pydantic import Field
 
 from unsloth_mcp.app import mcp
-from unsloth_mcp.config import Settings, get_settings, log
+from unsloth_mcp.config import Settings, get_settings, log, schedule_exit
 from unsloth_mcp.gpu import clear_env_cache, gpu_info, ollama_status, studio_status, system_status
 from unsloth_mcp.jobs import get_queue
 from unsloth_mcp.responses import _error_response, ok_response
@@ -37,6 +37,7 @@ _OPERATIONS = Literal[
     "env_install",
     "env_studio_start",
     "env_studio_stop",
+    "shutdown",
 ]
 
 
@@ -45,6 +46,17 @@ _OPERATIONS = Literal[
     # change state, so the tool is NOT read-only as a whole.
     annotations={"readonly": False},
     version="0.1.0",
+    output_schema={
+        "type": "object",
+        "properties": {
+            "success": {"type": "boolean"},
+            "message": {"type": "string"},
+            "data": {"type": "object"},
+            "error": {"type": "string"},
+            "error_type": {"type": "string"},
+        },
+        "required": ["success", "message"],
+    },
 )
 async def unsloth_ops(
     operation: Annotated[
@@ -140,8 +152,9 @@ async def unsloth_ops(
      - datasets_list - list datasets available for training
      - env_install - run the official Unsloth installer as a job (big download;
        refuses when already configured)
-     - env_studio_start - launch the Unsloth Studio web UI (port 8888) if installed
-     - env_studio_stop - stop the Studio server started by this server (tracks its PID)
+      - env_studio_start - launch the Unsloth Studio web UI (port 8888) if installed
+      - env_studio_stop - stop the Studio server started by this server (tracks its PID)
+      - shutdown - orderly self-termination for the fleet launcher (exits ~0.5s later)
 
     ## Return Format
     {"success": bool, "message": "natural language summary", "data": {...}}
@@ -194,6 +207,9 @@ async def unsloth_ops(
             return _op_env_studio_start(settings)
         if operation == "env_studio_stop":
             return _op_env_studio_stop(settings)
+        if operation == "shutdown":
+            schedule_exit()
+            return ok_response("unsloth-mcp shutting down in ~0.5s", {"stopping": True})
     except Exception as exc:
         return _error_response(str(exc), "unsloth_ops")
     return _error_response(f"unknown operation: {operation}", "validation")

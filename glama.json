@@ -7,7 +7,7 @@
     "url": "https://github.com/sandraschi"
   },
   "homepage": "https://github.com/sandraschi/unsloth-mcp",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "categories": ["local-llm", "training", "ml"],
   "tags": ["unsloth", "fine-tuning", "lora", "qlora", "grpo", "gguf", "ollama", "gpu"],
   "languages": ["python", "typescript"],

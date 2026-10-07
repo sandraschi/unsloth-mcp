@@ -9,15 +9,15 @@
     "entry_point": "src/unsloth_mcp/server.py",
     "mcp_config": {
       "command": "uv",
-      "args": ["--directory", "${PWD}", "run", "python", "-m", "unsloth_mcp.server"],
+      "args": ["--directory", "${__dirname}", "run", "python", "-m", "unsloth_mcp.server"],
       "env": {
         "PYTHONUNBUFFERED": "1",
-        "PYTHONPATH": "${PWD}/src"
+        "PYTHONPATH": "${__dirname}/src"
       }
     }
   },
   "tools": [
-    { "name": "unsloth_ops", "description": "Portmanteau: system, train, jobs_list, jobs_status, jobs_cancel, jobs_export, jobs_register_ollama, models_list, datasets_list" },
+    { "name": "unsloth_ops", "description": "Portmanteau: system, train, jobs_list, jobs_status, jobs_cancel, jobs_export, jobs_register_ollama, models_list, datasets_list, env_install, env_studio_start, env_studio_stop, shutdown" },
     { "name": "show_training_app", "description": "Prefab dashboard: GPU + jobs" },
     { "name": "show_system_app", "description": "Prefab dashboard: environment readiness" }
   ]

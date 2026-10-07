@@ -1,7 +1,15 @@
+set windows-shell := ["powershell.exe", "-NoProfile", "-Command"]
+
 REPO := justfile_directory()
 
 default:
     @just --list
+
+# Dev bootstrap: sync deps + install pre-commit hooks + webapp deps
+bootstrap:
+    uv sync --extra dev
+    uvx pre-commit install
+    cd web_sota; bun install
 
 # Sync dependencies (uv + bun)
 sync:
@@ -42,6 +50,10 @@ test:
 e2e:
     cd web_sota; bun x playwright test
 
+# Browser walk of the webapp (pre-Tauri smoke: stack start + title-matching nav)
+cua-webapp-test:
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/cua-webapp-test.ps1
+
 # Full local CI gate (mirrors .github/workflows/ci.yml)
 ci:
     uv run ruff check src/ tests/
@@ -52,10 +64,19 @@ ci:
     cd web_sota; bun x tsc --noEmit
     cd web_sota; bun x biome check src/
 
+# All gates green (alias for CI)
+gates-green:
+    just ci
+
+# Release certification: gates + e2e
+certify:
+    just gates-green
+    just e2e
+
 # Capture webapp screenshots for README Preview
 screenshots:
     cd web_sota; bun x playwright test screenshots.spec.ts
 
-# Bundle for Claude Desktop (MCPB) - MUST wipe+recopy src -> mcpb/src first
+# Bundle for Claude Desktop (MCPB) - fleet shim (wipe+recopy + checks inside)
 mcpb-pack:
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "D:\Dev\repos\mcp-central-docs\scripts\make-mcpb.ps1" -RepoPath "{{REPO}}"
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{{REPO}}/scripts/mcpb-pack.ps1" -RepoRoot "{{REPO}}"

@@ -102,4 +102,4 @@ Claude Desktop config snippet: see [Installation](INSTALL.md).
 
 ## License
 
-Apache-2.0 (this server). Unsloth core is Apache-2.0; Unsloth Studio UI is AGPL-3.0.
+MIT (this server). Unsloth core is Apache-2.0; Unsloth Studio UI is AGPL-3.0.

@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "FastMCP server for local LLM fine-tuning via Unsloth - train, jobs, models, datasets, GGUF export, Ollama register with VRAM guard"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
-license = { text = "Apache-2.0" }
+license = { text = "MIT" }
 dependencies = [
     "fastmcp>=3.4.4,<4",
     "prefab-ui>=0.14.0",

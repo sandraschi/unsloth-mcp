@@ -95,4 +95,29 @@ test.describe("Fleet Audit", () => {
       page.locator("[data-testid^='job-row-']").first().or(page.locator("[data-testid='job-list'] > div")),
     ).toBeAttached({ timeout: 20000 });
   });
+
+  test("Jobs list search filters rows", async ({ page }) => {
+    await page.goto("/jobs", { timeout: 20000 });
+    await page.locator("[data-testid='jobs-search']").fill("gemma-4-e2b-it");
+    await expect(page.locator("[data-testid^='job-row-']").first()).toBeAttached({
+      timeout: 10000,
+    });
+    await expect(page.locator("[data-testid='jobs-count']")).toContainText("item");
+    await page.locator("[data-testid='jobs-search']").fill("zzz-no-such-job");
+    await expect(page.locator("[data-testid^='job-row-']")).toHaveCount(0);
+  });
+
+  test("Models view toggle + search box", async ({ page }) => {
+    await page.goto("/models", { timeout: 20000 });
+    await page.waitForTimeout(1500);
+    await page.locator("[data-testid='models-view']").click();
+    await expect(page.locator("[data-testid='models-search']")).toBeAttached();
+    await expect(page.locator("[data-testid='models-count']")).toContainText("item");
+  });
+
+  test("Help shortcuts tab documents keys", async ({ page }) => {
+    await page.goto("/help", { timeout: 20000 });
+    await page.locator("[data-testid='help-tab-shortcuts']").click();
+    await expect(page.locator("[data-testid='help-panel-shortcuts']")).toBeAttached();
+  });
 });

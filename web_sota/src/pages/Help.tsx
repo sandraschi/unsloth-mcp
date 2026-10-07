@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PageHeader } from "../components/ui";
 
-type Tab = "overview" | "env" | "training" | "tools" | "troubleshooting";
+type Tab = "overview" | "env" | "training" | "tools" | "troubleshooting" | "shortcuts";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -9,6 +9,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "training", label: "Training Guide" },
   { id: "tools", label: "Tool Reference" },
   { id: "troubleshooting", label: "Troubleshooting" },
+  { id: "shortcuts", label: "Shortcuts" },
 ];
 
 function Code({ children }: { children: string }) {
@@ -439,6 +440,48 @@ export default function Help() {
             <a className="text-amber-400 underline" href="/settings">
               docs/ONBOARDING.md
             </a>
+          </p>
+        </div>
+      )}
+
+      {tab === "shortcuts" && (
+        <div
+          className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6 text-sm leading-relaxed text-zinc-300"
+          data-testid="help-panel-shortcuts"
+        >
+          <H2>Keyboard shortcuts</H2>
+          <table className="w-full text-sm">
+            <tbody>
+              <tr className="border-b border-zinc-700">
+                <td className="py-2 pr-4">
+                  <Code>Ctrl/⌘ + K</Code>
+                </td>
+                <td className="py-2 text-zinc-300">Focus the list search on this page</td>
+              </tr>
+              <tr className="border-b border-zinc-700">
+                <td className="py-2 pr-4">
+                  <Code>Ctrl/⌘ + L</Code>
+                </td>
+                <td className="py-2 text-zinc-300">Go to Logs</td>
+              </tr>
+              <tr className="border-b border-zinc-700">
+                <td className="py-2 pr-4">
+                  <Code>Ctrl/⌘ + H</Code>
+                </td>
+                <td className="py-2 text-zinc-300">Go to Help</td>
+              </tr>
+              <tr>
+                <td className="py-2 pr-4">
+                  <Code>Ctrl/⌘ + 0</Code>
+                </td>
+                <td className="py-2 text-zinc-300">Reset zoom to 100%</td>
+              </tr>
+            </tbody>
+          </table>
+          <H2>Zoom</H2>
+          <p>
+            <Code>Ctrl/⌘ + scroll</Code> steps through 50-300% (persisted per browser). The current
+            level shows in the sidebar footer.
           </p>
         </div>
       )}

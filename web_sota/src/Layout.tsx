@@ -15,8 +15,9 @@ import {
   Wrench,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { type Health, api } from "./api";
+import { useZoom } from "./hooks/useZoom";
 import Chat from "./pages/Chat";
 import Dashboard from "./pages/Dashboard";
 import Datasets from "./pages/Datasets";
@@ -47,6 +48,8 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [health, setHealth] = useState<Health | null>(null);
   const [healthOk, setHealthOk] = useState<boolean | null>(null);
+  const { zoom, resetZoom } = useZoom();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const poll = async () => {
@@ -62,6 +65,28 @@ export default function Layout() {
     const t = setInterval(poll, 10_000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === "k") {
+        e.preventDefault();
+        document.querySelector<HTMLElement>("[data-list-search]")?.focus();
+      } else if (k === "l") {
+        e.preventDefault();
+        navigate("/logs");
+      } else if (k === "h") {
+        e.preventDefault();
+        navigate("/help");
+      } else if (k === "0") {
+        e.preventDefault();
+        resetZoom();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navigate, resetZoom]);
 
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-100" data-testid="app">
@@ -127,6 +152,9 @@ export default function Layout() {
               {health.tool_count} tools · {health.server} {health.version}
             </div>
           )}
+          <div className="mt-1 text-sm text-zinc-300">
+            Zoom <span data-testid="zoom-indicator">{Math.round(zoom * 100)}%</span> · Ctrl+0 resets
+          </div>
         </div>
       </aside>
 

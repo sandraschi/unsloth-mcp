@@ -1,7 +1,9 @@
 import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { ListToolbar } from "../components/ListToolbar";
 import { PageHeader } from "../components/ui";
+import { useListControls } from "../hooks/useListControls";
 
 interface Dataset {
   name: string;
@@ -14,6 +16,17 @@ export default function Datasets() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const ctl = useListControls(datasets, {
+    searchText: (d) => `${d.name} ${d.path}`,
+    sorts: {
+      size: { label: "Size", compare: (a, b) => b.size_mb - a.size_mb },
+      rows: { label: "Rows", compare: (a, b) => b.rows_estimate - a.rows_estimate },
+      name: { label: "Name", compare: (a, b) => a.name.localeCompare(b.name) },
+    },
+    defaultSort: "size",
+    pageSize: 10,
+  });
 
   useEffect(() => {
     api
@@ -50,6 +63,20 @@ export default function Datasets() {
         </div>
       )}
       {loading && <div className="text-sm text-zinc-300">Loading...</div>}
+      <ListToolbar
+        id="datasets"
+        query={ctl.query}
+        onQuery={ctl.setQuery}
+        searchPlaceholder="Search name, path..."
+        sortKey={ctl.sortKey}
+        onSortKey={ctl.setSortKey}
+        sortOptions={ctl.sortOptions}
+        onToggleSortDir={ctl.toggleSortDir}
+        page={ctl.page}
+        pageCount={ctl.pageCount}
+        onPage={ctl.setPage}
+        total={ctl.total}
+      />
       <div className="overflow-hidden rounded-xl border border-zinc-800" data-testid="dataset-list">
         <table className="w-full text-sm">
           <thead className="bg-zinc-900 text-left text-sm uppercase text-zinc-300">
@@ -61,7 +88,7 @@ export default function Datasets() {
             </tr>
           </thead>
           <tbody>
-            {datasets.map((d) => (
+            {ctl.rows.map((d) => (
               <tr key={d.path} className="border-t border-zinc-800">
                 <td className="px-4 py-2 font-medium text-zinc-200">{d.name}</td>
                 <td className="px-4 py-2 text-zinc-300">{d.rows_estimate}</td>
@@ -71,10 +98,16 @@ export default function Datasets() {
             ))}
           </tbody>
         </table>
-        {!loading && datasets.length === 0 && (
+        {!loading && ctl.total === 0 && (
           <div className="border-t border-zinc-800 p-6 text-center text-sm text-zinc-300">
-            Drop .jsonl files into <code className="rounded bg-zinc-800 px-1">data/datasets/</code>{" "}
-            (repo root).
+            {ctl.query ? (
+              "No datasets match the current search."
+            ) : (
+              <>
+                Drop .jsonl files into{" "}
+                <code className="rounded bg-zinc-800 px-1">data/datasets/</code> (repo root).
+              </>
+            )}
           </div>
         )}
       </div>

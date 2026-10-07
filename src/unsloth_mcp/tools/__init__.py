@@ -4,6 +4,6 @@ FastMCP registers tools AT IMPORT TIME via @mcp.tool decorator.
 No import = no tool.
 """
 
-from unsloth_mcp.tools import prefab_cards, unsloth_ops  # noqa: F401
+from unsloth_mcp.tools import meta, prefab_cards, unsloth_ops  # noqa: F401
 
-__all__ = ["unsloth_ops", "prefab_cards"]
+__all__ = ["unsloth_ops", "prefab_cards", "meta"]

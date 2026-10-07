@@ -7,7 +7,9 @@ lifecycle initializes (POST /mcp/ would 500 otherwise).
 
 from __future__ import annotations
 
+import json
 import time
+from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
@@ -15,11 +17,11 @@ import httpx
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 import unsloth_mcp.tools  # noqa: F401  (registers all tools at boot)
 from unsloth_mcp.app import SERVER_NAME, mcp
-from unsloth_mcp.config import VERSION, get_settings, log, tail_log
+from unsloth_mcp.config import VERSION, get_settings, log, schedule_exit, tail_log
 from unsloth_mcp.gpu import gpu_info, ollama_status, studio_status, system_status
 from unsloth_mcp.jobs import get_queue
 from unsloth_mcp.tools.unsloth_ops import unsloth_ops
@@ -115,6 +117,7 @@ def _json_error(message: str, status: int = 400, **extra: Any) -> JSONResponse:
 # ---------------------------------------------------------------------------
 
 
+@web_app.get("/health")
 @web_app.get("/api/health")
 async def health() -> dict[str, Any]:
     settings = get_settings()
@@ -156,6 +159,58 @@ async def diagnostics() -> dict[str, Any]:
         },
         "errors": [],
     }
+
+
+@web_app.get("/api/capabilities")
+async def capabilities() -> dict[str, Any]:
+    """Standard capability shape: tools, endpoints, feature flags, ports."""
+    settings = get_settings()
+    tools = await _tool_list()
+    return {
+        "status": "ok",
+        "server": SERVER_NAME,
+        "version": VERSION,
+        "tools": [t["name"] for t in tools],
+        "tool_count": len(tools),
+        "endpoints": [
+            "/health",
+            "/api/health",
+            "/api/v1/diagnostics",
+            "/api/capabilities",
+            "/api/dashboard",
+            "/api/tools",
+            "/api/skills",
+            "/api/jobs",
+            "/api/models",
+            "/api/datasets",
+            "/api/gpu",
+            "/api/logs",
+            "/api/onboarding/status",
+            "/api/llm/discover",
+            "/api/llm/providers",
+            "/api/llm/models",
+            "/api/llm/onboarding",
+            "/api/llm/chat",
+            "/api/llm/chat/stream",
+            "/api/shutdown",
+            "/mcp",
+        ],
+        "features": {
+            "streaming": True,
+            "skills": True,
+            "prefab": True,
+            "shutdown": True,
+            "stdio_proxy": True,
+        },
+        "ports": {"backend": settings.web_port, "frontend": 11151},
+    }
+
+
+@web_app.post("/api/shutdown")
+async def shutdown() -> dict[str, Any]:
+    """Orderly exit for the fleet launcher: respond 200, exit ~500ms later."""
+    schedule_exit()
+    return {"status": "ok", "message": f"{SERVER_NAME} shutting down"}
 
 
 @web_app.get("/api/dashboard")
@@ -414,8 +469,8 @@ async def env_studio_stop() -> JSONResponse:
 # ---------------------------------------------------------------------------
 
 
-@web_app.get("/api/llm/discover")
-async def llm_discover() -> dict[str, Any]:
+async def _discover_providers() -> list[dict[str, Any]]:
+    """Probe local LLM providers (Ollama, LM Studio, vLLM). Never raises."""
     settings = get_settings()
     providers: list[dict[str, Any]] = []
     probes = [
@@ -439,7 +494,57 @@ async def llm_discover() -> dict[str, Any]:
                     providers.append({"name": name, "port": port, "detected": False})
             except httpx.HTTPError:
                 providers.append({"name": name, "port": port, "detected": False})
-    return {"status": "ok", "providers": providers}
+    return providers
+
+
+@web_app.get("/api/llm/discover")
+async def llm_discover() -> dict[str, Any]:
+    return {"status": "ok", "providers": await _discover_providers()}
+
+
+@web_app.get("/api/llm/providers")
+async def llm_providers() -> dict[str, Any]:
+    """Provider registry: local detected flags + cloud configured flags (never key bytes)."""
+    providers = await _discover_providers()
+    return {
+        "status": "ok",
+        "providers": [{**p, "configured": bool(p.get("detected"))} for p in providers],
+        "cloud": [],
+    }
+
+
+@web_app.get("/api/llm/models")
+async def llm_models(provider: str = Query("ollama")) -> dict[str, Any]:
+    """Model list per provider: live when reachable, curated fallback otherwise."""
+    providers = await _discover_providers()
+    match = next((p for p in providers if p["name"] == provider), None)
+    live = bool(match is not None and match.get("detected"))
+    models: list[str] = list(match.get("models", [])) if match is not None and live else []
+    if not models and provider == "ollama":
+        models = ["gemma3:4b", "qwen3:4b", "llama3.1:8b"]
+    return {"status": "ok", "provider": provider, "models": models, "live": live}
+
+
+@web_app.get("/api/llm/onboarding")
+async def llm_onboarding() -> dict[str, Any]:
+    """Fresh-install starter facts + recommended path for the under-hero cue."""
+    settings = get_settings()
+    providers = await _discover_providers()
+    detected = [p["name"] for p in providers if p.get("detected")]
+    status = system_status(settings)
+    return {
+        "status": "ok",
+        "fresh_install": not detected,
+        "detected": detected,
+        "recommended_path": detected[0] if detected else "ollama",
+        "starter_facts": {
+            "gpu": status["gpu"].get("name") if status["gpu"].get("available") else None,
+            "unsloth_configured": status["unsloth_env"].get("configured", False),
+        },
+        "next_steps": []
+        if detected
+        else ["Install Ollama (https://ollama.ai), then pull a model: `ollama pull gemma3:4b`"],
+    }
 
 
 @web_app.post("/api/llm/chat")
@@ -471,6 +576,53 @@ async def llm_chat(request: Request) -> JSONResponse:
             "model": data.get("model", model),
         }
     )
+
+
+@web_app.post("/api/llm/chat/stream")
+async def llm_chat_stream(request: Request) -> StreamingResponse:
+    """SSE backend chat proxy: streams Ollama /api/chat chunks as `data:` events."""
+    body = await request.json()
+    settings = get_settings()
+    messages = body.get("messages", [])
+    model = body.get("model")
+    if not messages:
+
+        async def _empty() -> AsyncIterator[str]:
+            yield f"data: {json.dumps({'error': 'messages required'})}\n\n"
+            yield "data: [DONE]\n\n"
+
+        return StreamingResponse(_empty(), media_type="text/event-stream")
+    url = f"{settings.ollama_url}/api/chat"
+    payload: dict[str, Any] = {"messages": messages, "stream": True}
+    if model:
+        payload["model"] = model
+
+    async def _gen() -> AsyncIterator[str]:
+        try:
+            async with httpx.AsyncClient(timeout=180) as client:
+                async with client.stream("POST", url, json=payload) as r:
+                    if r.status_code >= 400:
+                        yield f"data: {json.dumps({'error': f'ollama HTTP {r.status_code}'})}\n\n"
+                        yield "data: [DONE]\n\n"
+                        return
+                    async for line in r.aiter_lines():
+                        if not line.strip():
+                            continue
+                        try:
+                            chunk = json.loads(line)
+                        except ValueError:
+                            continue
+                        text = chunk.get("message", {}).get("content", "")
+                        if text:
+                            payload_out = {"content": text, "model": chunk.get("model", model)}
+                            yield f"data: {json.dumps(payload_out)}\n\n"
+                        if chunk.get("done"):
+                            break
+        except httpx.HTTPError as exc:
+            yield f"data: {json.dumps({'error': f'ollama unreachable: {exc}'})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(_gen(), media_type="text/event-stream")
 
 
 # ---------------------------------------------------------------------------

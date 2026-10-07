@@ -10,11 +10,32 @@ import asyncio
 import os
 import sys
 
+from fastmcp.server import create_proxy
+
 from unsloth_mcp import app as app_module
 from unsloth_mcp.config import VERSION, Settings, get_settings, log
-from unsloth_mcp.tools import prefab_cards, unsloth_ops  # noqa: F401  (registration)
+from unsloth_mcp.tools import meta, prefab_cards, unsloth_ops  # noqa: F401  (registration)
 
 mcp = app_module.mcp
+
+
+def _probe_daemon(settings: Settings) -> str | None:
+    """Return the live daemon base URL when the HTTP backend already serves.
+
+    Prevents SQLite split-brain: a second stdio process proxies to the daemon
+    instead of opening the same job database twice. Disable with
+    UNSLOTH_DAEMON_PROXY=0.
+    """
+    if os.environ.get("UNSLOTH_DAEMON_PROXY", "1").lower() in ("0", "false", "no", "off"):
+        return None
+    import httpx
+
+    base = f"http://127.0.0.1:{settings.web_port}"
+    try:
+        r = httpx.get(f"{base}/api/health", timeout=1.5)
+    except Exception:
+        return None
+    return base if r.status_code == 200 else None
 
 
 def main() -> None:
@@ -32,6 +53,12 @@ def main() -> None:
         serve(host=host, port=int(port))
         return
     log("[main] stdio transport")
+    base = _probe_daemon(settings)
+    if base is not None:
+        log(f"[main] daemon live at {base} - stdio proxy mode")
+        proxy = create_proxy(f"{base}/mcp")
+        asyncio.run(proxy.run_stdio_async())
+        return
     asyncio.run(mcp.run_stdio_async())
 
 

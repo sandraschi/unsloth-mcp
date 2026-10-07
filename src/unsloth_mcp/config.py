@@ -8,7 +8,6 @@ subprocesses in the Unsloth venv (see scripts/train_job.py).
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 
 VERSION = "0.1.0"
@@ -89,7 +88,20 @@ def log(msg: str, settings: Settings | None = None) -> None:
         with s.log_path().open("a", encoding="utf-8") as fh:
             fh.write(f"{msg}\n")
     except OSError:
-        print(msg, file=sys.stderr)
+        import logging
+
+        logging.getLogger("unsloth_mcp").warning("log fallback: %s", msg)
+
+
+def schedule_exit(delay: float = 0.5) -> None:
+    """Orderly self-termination: exit the process after `delay` seconds.
+
+    Used by POST /api/shutdown and the `shutdown` MCP op so the fleet launcher
+    can bounce the server after checkpointing. Separated for tests to patch.
+    """
+    import threading
+
+    threading.Timer(delay, lambda: os._exit(0)).start()
 
 
 def tail_log(settings: Settings, n: int = 200) -> list[str]:

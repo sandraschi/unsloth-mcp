@@ -18,5 +18,19 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/sandraschi/unsloth-mcp"
-  }
+  },
+  "tools": [
+    {
+      "name": "unsloth_ops",
+      "description": "Portmanteau: system, train, jobs_list, jobs_status, jobs_cancel, jobs_export, jobs_register_ollama, models_list, datasets_list, env_install, env_studio_start, env_studio_stop, shutdown"
+    },
+    {
+      "name": "show_training_app",
+      "description": "Prefab dashboard: GPU + jobs"
+    },
+    {
+      "name": "show_system_app",
+      "description": "Prefab dashboard: environment readiness"
+    }
+  ]
 }

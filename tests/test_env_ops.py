@@ -62,6 +62,10 @@ async def test_env_studio_start_missing_env(tmp_path, monkeypatch) -> None:
     settings = _settings(tmp_path)
     monkeypatch.setattr(ops, "get_settings", lambda: settings)
     monkeypatch.setattr(ops, "_studio_launcher", lambda s: None)
+    # Isolate from any real Studio on :8888 (e.g. Sandra's own instance).
+    monkeypatch.setattr(
+        ops, "studio_status", lambda url="http://127.0.0.1:8888": {"running": False}
+    )
     result = await ops.unsloth_ops(operation="env_studio_start")
     assert result["success"] is False
     assert result["error_type"] == "not_configured"
@@ -88,7 +92,10 @@ async def test_env_studio_start_tracks_pid(tmp_path, monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_env_studio_stop_unmanaged(tmp_path, monkeypatch) -> None:
-    _settings(tmp_path)
+    settings = _settings(tmp_path)
+    # Isolate from the real data/ dir (a stale studio.pid there would
+    # taskkill an arbitrary PID) and from any real Studio on :8888.
+    monkeypatch.setattr(ops, "get_settings", lambda: settings)
     monkeypatch.setattr(
         ops,
         "studio_status",

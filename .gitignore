@@ -37,6 +37,8 @@ data/
 *.db
 *.db-shm
 *.db-wal
+# Unsloth kernel compile cache (regenerable, never commit)
+unsloth_compiled_cache/
 
 # Secrets
 .env

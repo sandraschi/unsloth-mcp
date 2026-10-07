@@ -1,0 +1,6 @@
+{
+  "name": "unsloth-mcp",
+  "version": "0.1.0",
+  "description": "Local LLM fine-tuning control plane via Unsloth: train, jobs, GGUF export, Ollama register",
+  "hooks": "../hooks/hooks.json"
+}

@@ -1,7 +1,9 @@
 import { Play, RefreshCw, XCircle } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { type JobDetail, type JobsResponse, api } from "../api";
+import { ListToolbar } from "../components/ListToolbar";
 import { PageHeader, StatusBadge } from "../components/ui";
+import { useListControls } from "../hooks/useListControls";
 
 const EMPTY_FORM = {
   model_name: "unsloth/gemma-4-e2b-it",
@@ -23,6 +25,28 @@ export default function Jobs() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [detailError, setDetailError] = useState("");
+  const [status, setStatus] = useState("all");
+
+  const jobs = useMemo(
+    () => (data?.jobs ?? []).filter((j) => status === "all" || j.status === status),
+    [data, status],
+  );
+  const ctl = useListControls(jobs, {
+    searchText: (j) => `${j.id} ${j.model_name ?? ""} ${j.kind} ${j.status}`,
+    sorts: {
+      newest: {
+        label: "Newest",
+        compare: (a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0),
+      },
+      status: { label: "Status", compare: (a, b) => a.status.localeCompare(b.status) },
+      model: {
+        label: "Model",
+        compare: (a, b) => (a.model_name ?? a.kind).localeCompare(b.model_name ?? b.kind),
+      },
+    },
+    defaultSort: "newest",
+    pageSize: 8,
+  });
 
   const refresh = useCallback(() => {
     api
@@ -229,8 +253,32 @@ export default function Jobs() {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-300">
             Job list
           </h2>
+          <ListToolbar
+            id="jobs"
+            query={ctl.query}
+            onQuery={ctl.setQuery}
+            searchPlaceholder="Search id, model, status..."
+            sortKey={ctl.sortKey}
+            onSortKey={ctl.setSortKey}
+            sortOptions={ctl.sortOptions}
+            onToggleSortDir={ctl.toggleSortDir}
+            filterValue={status}
+            filterOptions={[
+              { value: "all", label: "All statuses" },
+              { value: "queued", label: "Queued" },
+              { value: "running", label: "Running" },
+              { value: "done", label: "Done" },
+              { value: "failed", label: "Failed" },
+              { value: "cancelled", label: "Cancelled" },
+            ]}
+            onFilter={setStatus}
+            page={ctl.page}
+            pageCount={ctl.pageCount}
+            onPage={ctl.setPage}
+            total={ctl.total}
+          />
           <div className="space-y-2" data-testid="job-list">
-            {data?.jobs.map((j) => (
+            {ctl.rows.map((j) => (
               <button
                 key={j.id}
                 onClick={() => openJob(j.id)}
@@ -246,9 +294,11 @@ export default function Jobs() {
                 </div>
               </button>
             ))}
-            {data && data.jobs.length === 0 && (
+            {ctl.total === 0 && (
               <div className="rounded-lg border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-300">
-                No jobs yet - start your first fine-tune.
+                {ctl.query || status !== "all"
+                  ? "No jobs match the current search/filter."
+                  : "No jobs yet - start your first fine-tune."}
               </div>
             )}
           </div>

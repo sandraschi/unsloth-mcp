@@ -7,6 +7,7 @@ lifecycle initializes (POST /mcp/ would 500 otherwise).
 
 from __future__ import annotations
 
+import asyncio
 import json
 import time
 from collections.abc import AsyncIterator
@@ -132,7 +133,9 @@ async def health() -> dict[str, Any]:
         "providers": {
             "gpu": status["gpu"].get("available", False),
             "unsloth": status["unsloth_env"].get("configured", False),
-            "ollama": bool(ollama_status(settings.ollama_url).get("configured")),
+            "ollama": bool(
+                (await asyncio.to_thread(ollama_status, settings.ollama_url)).get("configured")
+            ),
         },
     }
 
@@ -408,14 +411,16 @@ async def logs(n: int = Query(200, ge=1, le=1000)) -> dict[str, Any]:
 async def onboarding_status() -> dict[str, Any]:
     settings = get_settings()
     status = system_status(settings)
-    studio = studio_status()
+    studio = await asyncio.to_thread(studio_status)
     return {
         "status": "ok",
         "configured": status["configured"],
         "checks": {
             "gpu": status["gpu"].get("available", False),
             "unsloth_env": status["unsloth_env"].get("configured", False),
-            "ollama": bool(ollama_status(settings.ollama_url).get("configured")),
+            "ollama": bool(
+                (await asyncio.to_thread(ollama_status, settings.ollama_url)).get("configured")
+            ),
         },
         "studio": studio,
         "next_steps": []

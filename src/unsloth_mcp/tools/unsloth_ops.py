@@ -8,6 +8,7 @@ context bloat while the operation enum acts as a built-in catalog.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import json
 import subprocess
@@ -194,8 +195,8 @@ async def unsloth_ops(
         if operation == "jobs_export":
             return _op_jobs_export(settings, job_id=job_id, quantization_method=quantization_method)
         if operation == "jobs_register_ollama":
-            return _op_jobs_register_ollama(
-                settings, job_id=job_id, ollama_tag=model_name_to_register
+            return await asyncio.to_thread(
+                _op_jobs_register_ollama, settings, job_id=job_id, ollama_tag=model_name_to_register
             )
         if operation == "models_list":
             return _op_models_list(settings)
@@ -206,7 +207,7 @@ async def unsloth_ops(
         if operation == "env_studio_start":
             return _op_env_studio_start(settings)
         if operation == "env_studio_stop":
-            return _op_env_studio_stop(settings)
+            return await asyncio.to_thread(_op_env_studio_stop, settings)
         if operation == "shutdown":
             schedule_exit()
             return ok_response("unsloth-mcp shutting down in ~0.5s", {"stopping": True})

@@ -283,14 +283,14 @@ def _op_env_install(settings: Settings) -> dict:
 
 def _studio_launcher(settings: Settings) -> str | None:
     """Resolve the unsloth launcher exe from the Unsloth venv."""
-    import os
     from pathlib import Path
 
     candidate = Path(settings.unsloth_python).parent / "unsloth.exe"
     if candidate.exists():
         return str(candidate)
-    if os.path.exists(r"C:\Users\sandr\.unsloth\studio\unsloth_studio\Scripts\unsloth.exe"):
-        return r"C:\Users\sandr\.unsloth\studio\unsloth_studio\Scripts\unsloth.exe"
+    default_cli = Path.home() / ".unsloth" / "studio" / "unsloth_studio" / "Scripts" / "unsloth.exe"
+    if default_cli.exists():
+        return str(default_cli)
     return None
 
 

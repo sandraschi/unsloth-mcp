@@ -49,7 +49,7 @@ class Settings:
         #: Default: the Unsloth Studio venv installed by the official installer.
         self.unsloth_python: str = os.environ.get(
             "UNSLOTH_PYTHON",
-            r"C:\Users\sandr\.unsloth\studio\unsloth_studio\Scripts\python.exe",
+            str(Path.home() / ".unsloth" / "studio" / "unsloth_studio" / "Scripts" / "python.exe"),
         )
 
         #: Ollama endpoint for GGUF registration + chat proxy
